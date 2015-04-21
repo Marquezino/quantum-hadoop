@@ -16,7 +16,7 @@ import org.apache.hadoop.util.*;
 public class QW {
 
 	private static final int SIZE = 10;
-	private static final int STEPS = 8;
+	private static final int STEPS = 5;
 	private static final String PATH = "/user/david/qw_tmp/";
 	private static final String JAR_DIR = "/home/david/Desktop/java/";
 	private static final boolean CLEAN_FOLDERS = true;
@@ -29,7 +29,7 @@ public class QW {
 		
 			Configuration conf = new Configuration();
 			FileSystem fs = FileSystem.get(conf);
-			//FileUtil fu = new FileUtil();
+			FileUtil fu = new FileUtil();
 
 			// Delete the PATH directory if exists. And create a new one empty.
 			Path pt = new Path(PATH);
@@ -329,7 +329,7 @@ public class QW {
 			}
 			
 			pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.KronMatrix " + 
-						PATH+operator_W2B+"_input" + " " + PATH+operator_W2B + " B");			
+						PATH+operator_W2B+"_input" + " " + PATH+operator_W2B + " A");			
 
 			pr.waitFor();
 			pr.destroy();
@@ -349,10 +349,10 @@ public class QW {
 			String operator_G = "operator_G";
 			pt = new Path(PATH+operator_G);
 			br = new BufferedWriter(new OutputStreamWriter(fs.create(pt,true)));
-			br.write("#B," + Long.toString((long)(16*Math.pow(SIZE,4))) + "," + Long.toString((long)(16*Math.pow(SIZE,4))));
+			br.write("#A," + Long.toString((long)(16*Math.pow(SIZE,4))) + "," + Long.toString((long)(16*Math.pow(SIZE,4))));
 			
 			for (long i=0; i< (long)(16*Math.pow(SIZE,4)); i++) {
-				br.write("\nB," + Long.toString(i) + "," + Long.toString(i) + ",1.0j0");
+				br.write("\nA," + Long.toString(i) + "," + Long.toString(i) + ",1.0j0");
 			}
 
 			// Only if value in br.write != 1.0j0
@@ -379,111 +379,6 @@ public class QW {
 			System.out.println("End of the operator_G.");			
 
 			// End of the operator_G
-			// --------------------------------------------------------------------------------------------------
-			// Start of the operator W
-
-			String operator_W2 = "operator_W2";
-
-			// Delete the output directory if exists.
-			pt = new Path(PATH+operator_W2);
-			fs.delete(pt,true);
-
-			// Delete the input directory if exists and create a new one.
-			pt = new Path(PATH+operator_W2+"_input");
-			fs.delete(pt,true);
-			fs.mkdirs(pt);
-			
-			// Rename operator_W2A files
-			status = fs.listStatus(new Path(PATH+operator_W2A));
-			for (FileStatus stat : status){
-				
-				if (stat.getPath().toString().indexOf("part-") > -1) {
-
-					fs.rename(stat.getPath(), new Path(stat.getPath().toString()+"_A"));
-				}			
-
-			}
-
-			status = fs.listStatus(new Path(PATH+operator_W2A));
-			for (FileStatus stat : status){
-				
-				if (stat.getPath().toString().indexOf("part-") > -1) {
-
-					fs.rename(stat.getPath(), new Path(PATH+operator_W2+"_input"));
-				}			
-
-			}
-
-			status = fs.listStatus(new Path(PATH+operator_W2B));
-			for (FileStatus stat : status){
-				
-				if (stat.getPath().toString().indexOf("part-") > -1) {
-
-					fs.rename(stat.getPath(), new Path(PATH+operator_W2+"_input"));
-				}			
-
-			}
-			
-			pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix " + 
-						PATH+operator_W2+"_input" + " " + PATH+"tmp" + " " +
-						PATH+operator_W2 + " A");			
-
-			pr.waitFor();
-			pr.destroy();
-
-			if (CLEAN_FOLDERS) {
-				fs.delete(pt,true);
-				pt = new Path(PATH+operator_W2A);
-				fs.delete(pt,true);
-				pt = new Path(PATH+operator_W2B);
-				fs.delete(pt,true);
-			}
-
-			System.out.println("End of the operator_W2.");
-
-
-			String operator_W = "operator_W";
-
-			// Delete the output directory if exists.
-			pt = new Path(PATH+operator_W);
-			fs.delete(pt,true);
-
-			// Delete the input directory if exists and create a new one.
-			pt = new Path(PATH+operator_W+"_input");
-			fs.delete(pt,true);
-			fs.mkdirs(pt);
-
-			fs.rename(new Path(PATH+operator_G), new Path(PATH+operator_W+"_input"));
-
-			status = fs.listStatus(new Path(PATH+operator_W2));
-			for (FileStatus stat : status){
-				
-				if (stat.getPath().toString().indexOf("part-") > -1) {
-
-					fs.rename(stat.getPath(), new Path(PATH+operator_W+"_input"));
-				}			
-
-			}
-			
-			pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix " + 
-						PATH+operator_W+"_input" + " " + PATH+"tmp" + " " +
-						PATH+operator_W + " A");			
-
-			pr.waitFor();
-			pr.destroy();
-
-			if (CLEAN_FOLDERS) {
-				fs.delete(pt,true);
-				pt = new Path(PATH+operator_W2);
-				fs.delete(pt,true);
-			}
-			
-
-			System.out.println("End of the operator_W.");
-
-
-
-			// End of the operator_W
 			// --------------------------------------------------------------------------------------------------
 			// Start of the walkers_state
 
@@ -538,16 +433,6 @@ public class QW {
 
 			String walkers_state_t = "walkers_state_t";
 
-			status = fs.listStatus(new Path(PATH+operator_W));
-			for (int i = 0; i < status.length; i++){
-				
-				if (status[i].getPath().toString().indexOf("part-") > -1) {
-
-					fs.rename(status[i].getPath(), new Path(status[i].getPath().toString().replaceAll("part-r-","part-A-")));
-				}			
-
-			}
-
 			// Delete the output directory if exists.
 			pt = new Path(PATH+walkers_state_t);
 			fs.delete(pt,true);
@@ -557,30 +442,69 @@ public class QW {
 			fs.delete(pt,true);
 			fs.mkdirs(pt);
 
-
-			status = fs.listStatus(new Path(PATH+operator_W));
-			for (FileStatus stat : status) {
-
-				if (stat.getPath().toString().indexOf("part-") > -1) {
-					fs.rename(stat.getPath(), pt);
-				}
-
-			}
-
 			status = fs.listStatus(new Path(PATH+walkers_state));
 			for (FileStatus stat : status) {
 
 				if (stat.getPath().toString().indexOf("part-") > -1) {
-					fs.rename(stat.getPath(), pt);
-					//fu.copy(fs, stat.getPath(), fs, pt, false, true, conf);
+					//fs.rename(stat.getPath(), pt);
+					fu.copy(fs, stat.getPath(), fs, pt, false, true, conf);
 				}
 
 			}
 
+			fs.rename(new Path(PATH+operator_G), pt);
+
+			status = fs.listStatus(new Path(PATH+operator_W2A));
+			for (int i = 0; i < status.length; i++){
+				
+				if (status[i].getPath().toString().indexOf("part-r") > -1) {
+
+					fs.rename(status[i].getPath(), new Path(status[i].getPath().toString().replaceAll("part-r-","part-W2A-")));
+				}
+
+				if (status[i].getPath().toString().indexOf("_logs") > -1) {
+
+					fs.delete(status[i].getPath(),true);
+				}
+
+				if (status[i].getPath().toString().indexOf("_SUCCESS") > -1) {
+
+					fs.delete(status[i].getPath(),true);
+				}			
+
+			}
+
+			status = fs.listStatus(new Path(PATH+operator_W2B));
+			for (int i = 0; i < status.length; i++){
+				
+				if (status[i].getPath().toString().indexOf("part-r") > -1) {
+
+					fs.rename(status[i].getPath(), new Path(status[i].getPath().toString().replaceAll("part-r-","part-W2B-")));
+				}
+
+				if (status[i].getPath().toString().indexOf("_logs") > -1) {
+
+					fs.delete(status[i].getPath(),true);
+				}
+
+				if (status[i].getPath().toString().indexOf("_SUCCESS") > -1) {
+
+					fs.delete(status[i].getPath(),true);
+				}			
+
+			}
+
+			System.out.println("Time to generate the matrices = "+((System.nanoTime() - startTime)/Math.pow(10,9))+" seconds");	
+
+			startTime = System.nanoTime();
+
+			String G_walkers = "G_walkers";
+			String W2B_G_walkers = "W2B_G_walkers";
+
 			for (int i=0; i<STEPS; i++) {
 
 				if (i > 0) {
-					
+
 					pt = new Path(PATH+walkers_state_t+"_input");
 					status = fs.listStatus(pt);
 					for (FileStatus stat : status) {
@@ -594,34 +518,109 @@ public class QW {
 					status = fs.listStatus(new Path(PATH+walkers_state_t));
 					for (FileStatus stat : status) {
 
-						if (stat.getPath().toString().indexOf("part-") > -1) {
+						if (stat.getPath().toString().indexOf("part-r") > -1) {
 							fs.rename(stat.getPath(), pt);
 						}
 
 					}
 
 					pt = new Path(PATH+walkers_state_t);
-					fs.delete(pt,true);
+					fs.delete(pt,true);	
 
 				}
 
+				pt = new Path(PATH+G_walkers);
+				fs.delete(pt,true);
+
 				pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix " + 
-								PATH+walkers_state_t+"_input" + " " + PATH+"tmp" + " " +
-								PATH+walkers_state_t + " B");
+									PATH+walkers_state_t+"_input" + " " + PATH+"tmp" + " " +
+									PATH+G_walkers + " B");
 		
 
 				pr.waitFor();
 				pr.destroy();
 
+				// End of G * walkers_state_t
+
+			
+				pt = new Path(PATH+operator_W2B);
+
+				status = fs.listStatus(pt);
+				for (FileStatus stat : status) {
+
+					if (stat.getPath().toString().indexOf("part-r") > -1) {
+						fs.delete(stat.getPath(), false);
+					}
+
+				}		
+
+				status = fs.listStatus(new Path(PATH+G_walkers));
+				for (FileStatus stat : status) {
+
+					if (stat.getPath().toString().indexOf("part-r") > -1) {
+						fs.rename(stat.getPath(), pt);
+					}
+
+				}
+
+				pt = new Path(PATH+W2B_G_walkers);
+				fs.delete(pt,true);
+			
+				pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix " + 
+									PATH+operator_W2B + " " + PATH+"tmp" + " " +
+									PATH+W2B_G_walkers + " B");
+		
+
+				pr.waitFor();
+				pr.destroy();
+
+				// End of W2B * G_walkers
+
+				pt = new Path(PATH+operator_W2A);
+
+				status = fs.listStatus(pt);
+				for (FileStatus stat : status) {
+
+					if (stat.getPath().toString().indexOf("part-r") > -1) {
+						fs.delete(stat.getPath(), false);
+					}
+
+				}
+
+				status = fs.listStatus(new Path(PATH+W2B_G_walkers));
+				for (FileStatus stat : status) {
+
+					if (stat.getPath().toString().indexOf("part-r") > -1) {
+						fs.rename(stat.getPath(), pt);
+					}
+
+				}
+			
+				pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix " + 
+									PATH+operator_W2A + " " + PATH+"tmp" + " " +
+									PATH+walkers_state_t + " B");
+		
+
+				pr.waitFor();
+				pr.destroy();	
+
+				// End of W2A * W2B_G_walkers
+						
 				System.out.println("End of the Step "+i);
 			}
 
 			if (CLEAN_FOLDERS) {			
-				pt = new Path(PATH+operator_W);
+				pt = new Path(PATH+operator_W2A);
+				fs.delete(pt,true);
+				pt = new Path(PATH+operator_W2B);
 				fs.delete(pt,true);
 				pt = new Path(PATH+walkers_state);
 				fs.delete(pt,true);
 				pt = new Path(PATH+walkers_state_t+"_input");
+				fs.delete(pt,true);
+				pt = new Path(PATH+G_walkers);
+				fs.delete(pt,true);
+				pt = new Path(PATH+W2B_G_walkers);
 				fs.delete(pt,true);
 			}
 
@@ -654,7 +653,7 @@ public class QW {
 
 			System.out.println("Finished!");
 			
-			System.out.println("Runtime = "+((System.nanoTime() - startTime)/Math.pow(10,9))+" seconds");
+			System.out.println("Steps Runtime = "+((System.nanoTime() - startTime)/Math.pow(10,9))+" seconds");
 
                 }catch(Exception e){
                         System.out.println(e);
