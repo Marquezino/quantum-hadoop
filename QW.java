@@ -606,7 +606,7 @@ public class QW {
 
 				// End of W2A * W2B_G_walkers
 						
-				System.out.println("End of the Step "+i);
+				System.out.println("End of the Step "+(i+1));
 			}
 
 			if (CLEAN_FOLDERS) {			
