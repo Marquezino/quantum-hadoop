@@ -8,6 +8,10 @@ hadoop jar mult.jar mult.NormMatrix /user/david/norm /user/david/norm-out
 
 hadoop jar qw.jar qw.QW
 
+hadoop jar grover.jar grover.Grover /user/david/psi /user/david/psi_t 2
+
+hadoop jar gs.jar gs.GS
+
 ####################################################################################################
 
 ####################################################################################################
@@ -27,6 +31,12 @@ hadoop dfs -rmr /user/david/qw_tmp/*
 
 hadoop dfs -copyToLocal /user/david/qw_tmp/walkers_state_t qw_tmp/walkers_state_t
 hadoop dfs -copyToLocal /user/david/qw_tmp/walkers_state_norm qw_tmp
+
+hadoop dfs -copyToLocal /user/david/psi_t psi_t
+adoop dfs -rmr /user/david/psi_t
+
+hadoop dfs -copyToLocal /user/david/gs_tmp gs_tmp
+hadoop dfs -rmr /user/david/gs_tmp/*
 
 
 ####################################################################################################
@@ -49,4 +59,19 @@ QW.java
 
 jar -cvf qw.jar -C qw_class/ .
 
+
+mkdir grover_class
+
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d grover_class/ \
+Grover.java
+
+jar -cvf grover.jar -C grover_class/ .
+
+
+mkdir gs_class
+
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d gs_class/ \
+GS.java
+
+jar -cvf gs.jar -C gs_class/ .
 ####################################################################################################
