@@ -1,0 +1,38 @@
+####################################################################################################
+
+hadoop jar gs.jar gs.GS
+
+####################################################################################################
+
+####################################################################################################
+# Manipular os resultados apos cada execucao #######################################################
+
+
+hadoop dfs -copyToLocal /user/david/psi_t psi_t
+adoop dfs -rmr /user/david/psi_t
+
+hadoop dfs -copyToLocal /user/david/gs_tmp gs_tmp
+hadoop dfs -rmr /user/david/gs_tmp/*
+
+
+####################################################################################################
+
+####################################################################################################
+# Criando um arquivo .jar ##########################################################################
+
+mkdir grover_class
+
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d grover_class/ \
+Grover.java
+
+jar -cvf grover.jar -C grover_class/ .
+
+
+mkdir gs_class
+
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d gs_class/ \
+GS.java
+
+jar -cvf gs.jar -C gs_class/ .
+
+####################################################################################################
