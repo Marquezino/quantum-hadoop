@@ -1,0 +1,35 @@
+####################################################################################################
+# Operações ########################################################################################
+
+hadoop jar mult.jar mult.MultMatrix /user/david/mult /user/david/tmp /user/david/mult-out B
+hadoop jar mult.jar mult.KronMatrix /user/david/multKron /user/david/multKron-out B
+hadoop jar mult.jar mult.NormMatrix /user/david/norm /user/david/norm-out
+
+####################################################################################################
+
+####################################################################################################
+# Manipular os resultados apos cada execucao #######################################################
+
+hadoop dfs -copyToLocal /user/david/mult-out mult-out
+hadoop dfs -rmr /user/david/mult-out
+
+hadoop dfs -copyToLocal /user/david/multKron-out multKron-out
+hadoop dfs -rmr /user/david/multKron-out
+
+hadoop dfs -copyToLocal /user/david/norm-out norm-out
+hadoop dfs -rmr /user/david/norm-out
+
+
+####################################################################################################
+
+####################################################################################################
+# Criando um arquivo .jar ##########################################################################
+
+mkdir mult_class
+
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d mult_class/ \
+MultMatrix.java KronMatrix.java NormMatrix.java
+
+jar -cvf mult.jar -C mult_class/ .
+
+####################################################################################################

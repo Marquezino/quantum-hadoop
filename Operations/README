@@ -1,0 +1,70 @@
+Operations Version 1.0 2015-05-23
+
+
+What is it?
+-----------
+
+Operations is a pack of programs coded in Java
+that use Apache Hadoop to execute a specific
+operation.
+
+
+Apache Hadoop and Java Version notes
+------------------------------------
+
+The Quantum Walk Simulator supports JDK 1.6 or
+higher and Apache Hadoop version 1.2 or higher.
+Note that we have currently tested this
+implementation with JDK 1.7 and Apache Hadoop
+1.2.1.
+
+
+Parameters
+----------
+
+To run the operations, you will need same
+parameters:
+
+-HDFS_INPUT_FOLDER: The directory in the HDFS
+	where are the input files.
+
+-HDFS_TEMPORARY_FOLDER: A path to a absent
+	ditectory in the HDFS. It will be deleted
+	in the end of execution.
+
+-HDFS_OUTPUT_FOLDER: A path to a absent
+	ditectory in the HDFS. The program will store
+	the result here. 
+
+-TYPE_OF_MATRIX: If is the left matrix (A) or the
+	right matrix (B).
+
+
+Compile and run
+---------------
+
+To compile the code you need to know the folder
+path where the Apache Hadoop was installed.
+Change HADOOP_DIR for the right path.
+
+Open the Terminal and go to the folder where
+MultMatrix.java, KronMatrix.java and
+NormMatrix.java are stored. Now, execute the follow
+commands:
+
+mkdir mult_class
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d mult_class/ \
+MultMatrix.java KronMatrix.java NormMatrix.java
+jar -cvf mult.jar -C mult_class/ .
+
+To run execute the follow command:
+
+Matrix Multiplication
+hadoop jar mult.jar mult.MultMatrix HDFS_INPUT_FOLDER HDFS_TEMPORARY_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+
+Kronecker Product
+hadoop jar mult.jar mult.KronMatrix HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+
+Norm
+hadoop jar mult.jar mult.NormMatrix HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER
+
