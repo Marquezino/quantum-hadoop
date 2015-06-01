@@ -1,0 +1,67 @@
+Quantum Walk Simulator Version 1.0 2015-05-23
+
+
+What is it?
+-----------
+
+Quantum Walk Simulator is a program coded in Java
+that use Apache Hadoop to execute a Quantum
+Walk simulation.
+
+
+Apache Hadoop and Java Version notes
+------------------------------------
+
+The Quantum Walk Simulator supports JDK 1.6 or
+higher and Apache Hadoop version 1.2 or higher.
+Note that we have currently tested this
+implementation with JDK 1.7 and Apache Hadoop
+1.2.1.
+
+
+Parameters
+----------
+
+In the QWS.java file the user can change the
+value of the variable STEPS, FILES, WORK_DIR,
+JAR_DIR and OUTPUT_DIR.
+
+-STEPS: The number of steps that will be executed
+	in the simulation.
+
+-FILES: The path of the file that contains the
+	paths to the files of all matrices U and
+	the vector psi. The order matter. Should
+	be: U_0,U_1,...,U_n,psi. One per line.
+
+-WORK_DIR: The path in the HDFS where the program
+	will store the data. 
+
+-JAR_DIR: The folder path where the .jar files
+	are stored.
+
+-OUTPUT_DIR: The folder path where the result
+	will be stored.
+
+
+Compile and run
+---------------
+
+To compile the code you need to know the folder
+path where the Apache Hadoop was installed.
+Change HADOOP_DIR for the right path.
+
+Open the Terminal and go to the folder where
+QWS.java are stored. Now, execute the follow
+commands:
+
+mkdir qws_class
+javac -cp HADOOP_DIR/*:HADOOP_DIR/lib/* -d \
+qws_class/ QWS.java
+jar -cvf qws.jar -C qws_class/ .
+
+To run execute the follow command:
+
+hadoop jar qws.jar qws.QWS
+
+

@@ -25,11 +25,11 @@ hadoop dfs -rmr /user/david/norm-out
 ####################################################################################################
 # Criando um arquivo .jar ##########################################################################
 
-mkdir mult_class
+mkdir src/mult_class
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d mult_class/ \
-MultMatrix.java KronMatrix.java NormMatrix.java
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/mult_class/ \
+src/MultMatrix.java src/KronMatrix.java src/NormMatrix.java
 
-jar -cvf mult.jar -C mult_class/ .
+jar -cvf mult.jar -C src/mult_class/ .
 
 ####################################################################################################

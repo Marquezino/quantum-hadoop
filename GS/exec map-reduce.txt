@@ -1,4 +1,7 @@
 ####################################################################################################
+# Operações ########################################################################################
+
+hadoop jar grover.jar grover.Grover /user/david/psi /user/david/psi_t 2
 
 hadoop jar gs.jar gs.GS
 
@@ -6,7 +9,6 @@ hadoop jar gs.jar gs.GS
 
 ####################################################################################################
 # Manipular os resultados apos cada execucao #######################################################
-
 
 hadoop dfs -copyToLocal /user/david/psi_t psi_t
 adoop dfs -rmr /user/david/psi_t
@@ -20,19 +22,19 @@ hadoop dfs -rmr /user/david/gs_tmp/*
 ####################################################################################################
 # Criando um arquivo .jar ##########################################################################
 
-mkdir grover_class
+mkdir src/grover_class
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d grover_class/ \
-Grover.java
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/grover_class/ \
+src/Grover.java
 
-jar -cvf grover.jar -C grover_class/ .
+jar -cvf grover.jar -C src/grover_class/ .
 
 
-mkdir gs_class
+mkdir src/gs_class
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d gs_class/ \
-GS.java
+javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/gs_class/ \
+src/GS.java
 
-jar -cvf gs.jar -C gs_class/ .
+jar -cvf gs.jar -C src/gs_class/ .
 
 ####################################################################################################

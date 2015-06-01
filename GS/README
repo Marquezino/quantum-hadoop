@@ -1,0 +1,73 @@
+Grover Simulator Version 1.0 2015-05-03
+
+
+What is it?
+-----------
+
+Grover Simulator is a program coded in Java that
+use Apache Hadoop to execute a Grover simulation.
+
+
+Apache Hadoop and Java Version notes
+------------------------------------
+
+The Grover Simulator supports JDK 1.6 or higher
+and Apache Hadoop version 1.2 or higher. Note that we
+have currently tested this implementation with
+JDK 1.7 and Apache Hadoop 1.2.1.
+
+
+Parameters
+----------
+
+In the Grover.java file the user can change the
+value of the variable COUNT_PSI.
+
+-COUNT_PSI: This value should be the maximum
+	number of parallel executions
+	configurated in	Apache Hadoop. Contact
+	the cluster administrator for that
+	information.
+
+In the GS.java file the user can change the value
+of the variables n, PATH and JAR_DIR.
+
+-n: This is the size of the list where the Grover
+	algorithm will do the search.
+
+-PATH: The path in the HDFS where the program
+	will store the data. 
+
+-JAR_DIR: The folder path where the .jar files
+	are stored. 
+
+
+Compile and run
+---------------
+
+To compile the code you need to know the folder
+path where the Apache Hadoop was installed.
+Change HADOOP_DIR for the right path.
+
+Open the Terminal and go to the folder where
+Grover.java and GS.java are stored. Now, execute
+the follow commands:
+
+mkdir grover_class
+javac -cp HADOOP_DIR/*:HADOOP_DIR/lib/* -d \
+grover_class/ Grover.java
+jar -cvf grover.jar -C grover_class/ .
+mkdir gs_class
+javac -cp HADOOP_DIR/*:HADOOP_DIR/lib/* -d \
+gs_class/ GS.java
+jar -cvf gs.jar -C gs_class/ .
+
+To run execute the follow command:
+
+hadoop jar gs.jar gs.GS
+
+
+
+
+
+
