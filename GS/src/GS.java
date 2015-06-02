@@ -53,7 +53,7 @@ public class GS {
     /**
      * The folder path where the .jar files are stored.
      */
-    private static final String JAR_DIR = "/home/david/Desktop/java/GS";
+    private static final String JAR_DIR = "/home/david/Desktop/java/GS/";
 
     public static void main(String[] args) throws Exception {
 
@@ -115,7 +115,7 @@ public class GS {
                     status = fs.listStatus(pt);
                     for (FileStatus stat : status) {
 
-                        if (stat.getPath().toString().indexOf("part-r-") > -1) {
+                        if (stat.getPath().toString().indexOf("part-") > -1) {
                             fs.delete(stat.getPath(), false);
                         }
 
@@ -124,7 +124,7 @@ public class GS {
                     status = fs.listStatus(new Path(PATH + psiT));
                     for (FileStatus stat : status) {
 
-                        if (stat.getPath().toString().indexOf("part-r-") > -1) {
+                        if (stat.getPath().toString().indexOf("part-") > -1) {
                             fs.rename(stat.getPath(), pt);
                         }
 

@@ -41,7 +41,7 @@ public class QW {
     private static final int SIZE = 10;
     private static final int STEPS = 5;
     private static final String PATH = "/user/david/qw_tmp/";
-    private static final String JAR_DIR = "/home/david/Desktop/java/";
+    private static final String JAR_DIR = "/home/david/Desktop/java/QW/";
     private static final boolean CLEAN_FOLDERS = true;
 
     public static void main(String[] args) throws Exception {
@@ -762,9 +762,9 @@ public class QW {
             System.out.println("Steps Runtime = " + ((System.nanoTime()
                     - startTime) / Math.pow(10, 9)) + " seconds");
 
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
 
     }
 

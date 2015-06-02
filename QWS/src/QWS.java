@@ -190,7 +190,7 @@ public class QWS {
 
             }
 
-            System.out.println("The preparation of the files is complete.\n"
+            System.out.println("The files preparation is complete.\n"
                     + "Executing the steps...");
 
             rt = Runtime.getRuntime();
@@ -286,9 +286,9 @@ public class QWS {
             System.out.println("Runtime = " + ((System.nanoTime() - startTime)
                     / Math.pow(10, 9)) + " seconds");
 
-                } catch (Exception e) {
-                        System.out.println(e);
-                }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
 
     }
 
