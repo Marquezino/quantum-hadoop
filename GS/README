@@ -32,7 +32,7 @@ value of the variable COUNT_PSI.
 In the GS.java file the user can change the value
 of the variables n, PATH and JAR_DIR.
 
--n: This is the size of the list where the Grover
+-N: This is the size of the list where the Grover
 	algorithm will do the search.
 
 -PATH: The path in the HDFS where the program
