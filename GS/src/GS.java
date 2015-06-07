@@ -1,5 +1,5 @@
 /*
- * GS.java    1.0 2015/05/04
+ * GS.java    1.1 2015/06/07
  *
  * Copyright (C) 2015 GNU General Public License
  *
@@ -20,6 +20,7 @@ package gs;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.io.File;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,7 +34,7 @@ import org.apache.hadoop.conf.Configuration;
     This software simulate the Grover's algorithm using Apache Hadoop.
  *
  * @version
-    1.0 4 May 2015  * @author
+    1.1 7 Jun 2015  * @author
     David Souza  */
 
 
@@ -43,7 +44,7 @@ public class GS {
      * This is the size of the list where the Grover algorithm will do the
      * search.
      */
-    private static final int N = 10;
+    private static final int N = 4;
 
     /**
      * The path in the HDFS where the program will store the data.
@@ -55,6 +56,12 @@ public class GS {
      */
     private static final String JAR_DIR = "/home/david/Desktop/java/GS/";
 
+    /**
+     * The folder path where the result will be stored.
+     */
+    private static final String OUTPUT_DIR =
+            "/home/david/Desktop/java/GS/Result/";
+
     public static void main(String[] args) throws Exception {
 
         long startTime = System.nanoTime();
@@ -62,9 +69,11 @@ public class GS {
         int steps = (int) ((Math.PI / 4) * Math.sqrt(n));
         String psi;
         String psiT;
+        String pdf;
         Runtime rt = Runtime.getRuntime();
         Process pr;
         BufferedWriter bw;
+        File fl;
 
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
@@ -94,6 +103,8 @@ public class GS {
                     - startTime) / Math.pow(10, 9)) + " seconds");    
 
             startTime = System.nanoTime();
+
+            System.out.println("Executing the steps...");
 
             // End of psi generation. Start of the Steps
 
@@ -144,6 +155,53 @@ public class GS {
 
                 System.out.println("End of the Step " + (i + 1));
             }
+
+            // Merge psiT output files.
+            fu.copyMerge(fs, new Path(PATH + psiT), fs, new Path(PATH + psiT
+                    + "_" + Integer.toString(N) + "/part-0"), true, conf, null);
+
+
+            // Calculate the probability distribution function
+            pdf = "pdf";
+            pr = rt.exec("hadoop jar " + JAR_DIR
+                    + "grover.jar grover.PDF " + PATH + psiT + "_"
+                    + Integer.toString(N) + " " + PATH + pdf);
+
+            pr.waitFor();
+            pr.destroy();
+
+            System.out.println("End of the PDF calculation.");
+
+            // Delete the OUTPUT_DIR if it exists.
+            fl = new File(OUTPUT_DIR);
+            fu.fullyDelete(fl);
+
+            // Copy the result from HDFS to local.
+            pt = new Path(PATH + psiT + "_" + Integer.toString(N));
+            fl = new File(OUTPUT_DIR + psiT + "_" + Integer.toString(N));
+            fu.copy(fs, pt, fl, false, conf);
+
+            pt = new Path(PATH + pdf);
+            fl = new File(OUTPUT_DIR + pdf);
+            fu.copy(fs, pt, fl, false, conf);
+
+
+            // Create a chart of the probability distribution function of psiT
+            pr = rt.exec("hadoop jar " + JAR_DIR
+                    + "grover.jar grover.PDFChart " + OUTPUT_DIR + pdf
+                    + "/part-r-00000" + " " + OUTPUT_DIR);
+
+            pr.waitFor();
+            pr.destroy();
+
+            System.out.println("PNG chart created.");
+
+
+            // Delete the PATH directory.
+            pt = new Path(PATH);
+            fs.delete(pt, true);
+
+            fs.close();
 
 
             System.out.println("Finished!");

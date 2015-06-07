@@ -265,14 +265,20 @@ public class QWS {
             System.out.println("End of the psiTNorm.");
 
 
+            // Merge psiT output files.
+            pt = new Path(psiT);
+            fu.copyMerge(fs, pt, fs, new Path(psiT + "_New/part-0"), true, conf,
+                    null);
+            fs.rename(new Path(psiT + "_New"), pt);
+
             // Delete the OUTPUT_DIR if it exists.
             fu.fullyDelete(new File(OUTPUT_DIR));
 
             // Copy the result from HDFS to local.
             pt = new Path(psiT);
-            fs.copyToLocalFile(pt, new Path(OUTPUT_DIR + "psiT"));
+            fu.copy(fs, pt, new File(OUTPUT_DIR + "psiT"), false, conf);
             pt = new Path(psiTNorm);
-            fs.copyToLocalFile(pt, new Path(OUTPUT_DIR + "psiTNorm"));
+            fu.copy(fs, pt, new File(OUTPUT_DIR + "psiTNorm"), false, conf);
 
 
             // Delete the WORK_DIR directory.
@@ -280,6 +286,7 @@ public class QWS {
             fs.delete(pt, true);
 
             fs.close();
+
 
             System.out.println("Finished!");
 

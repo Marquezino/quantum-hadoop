@@ -3,6 +3,10 @@
 
 hadoop jar grover.jar grover.Grover /user/david/psi /user/david/psi_t 2
 
+hadoop jar grover.jar grover.PDF /user/david/pdf /user/david/pdf-out
+
+hadoop jar grover.jar grover.PDFChart pdf-out/part-r-00000 pdf-out/../
+
 hadoop jar gs.jar gs.GS
 
 ####################################################################################################
@@ -12,6 +16,9 @@ hadoop jar gs.jar gs.GS
 
 hadoop dfs -copyToLocal /user/david/psi_t psi_t
 adoop dfs -rmr /user/david/psi_t
+
+hadoop dfs -copyToLocal /user/david/pdf-out pdf-out
+adoop dfs -rmr /user/david/pdf-out
 
 hadoop dfs -copyToLocal /user/david/gs_tmp gs_tmp
 hadoop dfs -rmr /user/david/gs_tmp/*
@@ -24,16 +31,14 @@ hadoop dfs -rmr /user/david/gs_tmp/*
 
 mkdir src/grover_class
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/grover_class/ \
-src/Grover.java
+javac -d src/grover_class/ src/Grover.java src/PDF.java src/PDFChart.java
 
 jar -cvf grover.jar -C src/grover_class/ .
 
 
 mkdir src/gs_class
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/gs_class/ \
-src/GS.java
+javac -d src/gs_class/ src/GS.java
 
 jar -cvf gs.jar -C src/gs_class/ .
 
