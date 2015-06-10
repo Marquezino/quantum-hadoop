@@ -1,5 +1,5 @@
 /*
- * KronMatrix.java    1.2 2015/04/23
+ * KronMatrix.java    1.3 2015/06/10
  *
  * Copyright (C) 2015 GNU General Public License
  *
@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -46,7 +47,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
     using Apache Hadoop.
  *
  * @version
-    1.2 23 Apr 2015  * @author
+    1.3 10 Jun 2015  * @author
     David Souza  */
 
 
@@ -81,6 +82,7 @@ public class KronMatrix {
      * function.
      */
     private static final long NUMBER_ELEMENTS_IN_MEMORY = 1000000;
+
 
     public static class Map extends Mapper<LongWritable, Text, Text, Text> {
         public void map(LongWritable key, Text value, Context context)
@@ -276,7 +278,8 @@ public class KronMatrix {
     }
 
 
-    public static void main(String[] args) throws Exception {
+    public static long prepareA(Configuration conf, FileSystem fsInput,
+            Path inputPath, Path newInputPath) {
 
         long countA = 0;
         BufferedReader br;
@@ -288,28 +291,12 @@ public class KronMatrix {
         boolean verified;
         String[] val;
         String[] tempVal;
-        String temp;
         BufferedWriter bw;
-        long countB = 0;
-        boolean cfCountB = false;
-        long numberOfParts = 1;
-
-        Configuration conf = new Configuration();
-        Path inputPath;
-        Path outputPath;
-        FileSystem fsInput;
         FileStatus[] status;
-        FileSystem  fs;
-
+        FileUtil fu = new FileUtil();
 
         try {
-            inputPath = new Path(args[0]);
-            outputPath = new Path(args[1]);
 
-            // Set if the output will be matrix type A ou type B
-            conf.set("typeMatrixOutput", args[2]);
-
-            fsInput = FileSystem.get(conf);
             // The names of all files in the input path
             status = fsInput.listStatus(inputPath);
 
@@ -317,7 +304,8 @@ public class KronMatrix {
                 br = new BufferedReader(new InputStreamReader(fsInput.open(
                         status[i].getPath())));
                 oldPath = status[i].getPath().toString();
-                newPath = oldPath + "_new";
+                newPath = oldPath.replaceAll(inputPath.toString(),
+                            newInputPath.toString());
                 firstLine = "splitted";
                 newSize = false;
                 verified = false;
@@ -358,6 +346,10 @@ public class KronMatrix {
                                                 + "," + val[2]);
                                         firstLine = "";
                                     }
+
+                                } else {
+                                    System.out.println("Wrong input format.");
+                                    System.exit(1);
                                 }
 
                             } else {
@@ -384,13 +376,12 @@ public class KronMatrix {
 
                     if (newSize) {
                         bw.close();
-                        System.out.println("New format to matrix A. Old format"
-                                + " deleted.");
-                        // Delete the old file that haven't the count.
-                        fsInput.delete(status[i].getPath(), true);
+
                     } else {
                         bw.close();
                         fsInput.delete(new Path(newPath), true);
+                        fu.copy(fsInput, status[i].getPath(), fsInput,
+                                newInputPath, false, true, conf);
                     }
 
                 }
@@ -399,12 +390,42 @@ public class KronMatrix {
 
             }
 
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        return countA;
+    }
+
+
+    public static long prepareB(Configuration conf, FileSystem fsInput,
+            Path inputPath, Path newInputPath, long countA) {
+
+        long countB = 0;
+        BufferedReader br;
+        String oldPath;
+        String newPath;
+        String line;
+        String firstLine;
+        boolean newSize;
+        boolean verified;
+        String[] val;
+        String[] tempVal;
+        BufferedWriter bw;
+        FileStatus[] status;
+        FileUtil fu = new FileUtil();
+
+        try {
+
+            // The names of all files in the input path
             status = fsInput.listStatus(inputPath);
             for (int i = 0; i < status.length; i++) {
                 br = new BufferedReader(new InputStreamReader(fsInput.open(
                         status[i].getPath())));
                 oldPath = status[i].getPath().toString();
-                newPath = oldPath + "_new";
+                newPath = oldPath.replaceAll(inputPath.toString(),
+                            newInputPath.toString());
                 firstLine = "splitted";
                 newSize = false;
                 verified = false;
@@ -431,6 +452,7 @@ public class KronMatrix {
                                 line.charAt(0)).equals(" "))) {
 
                             val = line.split(",", 2);
+
                             if (!val[0].equals("#B")) {
 
                                 if (!newSize && !verified) {
@@ -460,7 +482,8 @@ public class KronMatrix {
                                         firstLine = "";
                                     }
                                 } else {
-                                    cfCountB = true;
+                                    System.out.println("Wrong input format.");
+                                    System.exit(1);
                                 }
 
                             } else {
@@ -478,13 +501,12 @@ public class KronMatrix {
 
                     if (newSize) {
                         bw.close();
-                        System.out.println("New format to matrix B. Old format"
-                                + " deleted.");
-                        // Delete the old file that haven't the count.
-                        fsInput.delete(status[i].getPath(), true);
+
                     } else {
                         bw.close();
                         fsInput.delete(new Path(newPath), true);
+                        fu.copy(fsInput, status[i].getPath(), fsInput,
+                                newInputPath, false, true, conf);
                     }
 
                 }
@@ -493,11 +515,37 @@ public class KronMatrix {
 
             }
 
-            if (cfCountB) {
-                countB /= countA;
-            }
 
-            status = fsInput.listStatus(inputPath);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        return countB;
+    }
+
+
+    public static long splitA(Configuration conf, FileSystem fsInput,
+            Path inputPath, Path newInputPath, long countB) {
+
+        long numberOfParts = 1;
+        BufferedReader br;
+        String oldPath;
+        String newPath;
+        String line;
+        String firstLine;
+        boolean newSize;
+        boolean verified;
+        String[] val;
+        String[] tempVal;
+        BufferedWriter bw;
+        FileStatus[] status;
+        String temp;
+        FileUtil fu = new FileUtil();
+
+        try {
+
+            // The names of all files in the input path
+            status = fsInput.listStatus(newInputPath);
             if (countB > NUMBER_ELEMENTS_IN_MEMORY) {
 
                 if (countB % NUMBER_ELEMENTS_IN_MEMORY == 0) {
@@ -510,7 +558,7 @@ public class KronMatrix {
                     br = new BufferedReader(new InputStreamReader(fsInput.open(
                             status[i].getPath())));
                     oldPath = status[i].getPath().toString();
-                    newPath = oldPath + "_parts";
+                    newPath = oldPath + "InPieces";
                     firstLine = "splitted";
                     newSize = false;
                     verified = false;
@@ -536,8 +584,7 @@ public class KronMatrix {
                                     if (!newSize && !verified) {
                                         tempVal = line.split(",");
                                         verified = true;
-                                        if (tempVal.length == 5 && tempVal[1].
-                                                indexOf("_") == -1) {
+                                        if (tempVal.length == 5) {
                                             newSize = true;
                                         }
                                     }
@@ -564,6 +611,10 @@ public class KronMatrix {
                                             firstLine = "";
                                         }
 
+                                    } else {
+                                        System.out.println("Wrong input format."
+                                                );
+                                        System.exit(1);
                                     }
 
                                 } else {
@@ -582,13 +633,14 @@ public class KronMatrix {
 
                         if (newSize) {
                             bw.close();
-                            System.out.println("New format to matrix A: with"
-                                    + " parts. Old format deleted.");
-                            // Delete the old file that haven't the count.
+                            // Delete the old file not splitted.
                             fsInput.delete(status[i].getPath(), true);
+
                         } else {
                             bw.close();
                             fsInput.delete(new Path(newPath), true);
+                            fu.copy(fsInput, status[i].getPath(), fsInput,
+                                newInputPath, false, true, conf);
                         }
 
                     }
@@ -598,6 +650,51 @@ public class KronMatrix {
                 }
 
             }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+        return numberOfParts;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+
+        long countA = 0;
+        long countB = 0;
+        long numberOfParts = 1;
+        Configuration conf = new Configuration();
+        Path inputPath;
+        Path outputPath;
+        Path newInputPath;
+        FileSystem fsInput;
+        FileSystem  fs;
+
+
+        try {
+
+            inputPath = new Path(args[0]);
+            outputPath = new Path(args[1]);
+            newInputPath = new Path(inputPath.toString() + "NewFormat");
+
+            // Set if the output will be matrix type A ou type B
+            conf.set("typeMatrixOutput", args[2]);
+
+            fsInput = FileSystem.get(conf);
+
+            // Create a new input folder for the new format files
+            fsInput.delete(newInputPath, true);
+            fsInput.mkdirs(newInputPath);
+
+            countA = prepareA(conf, fsInput, inputPath, newInputPath);
+
+            countB = prepareB(conf, fsInput, inputPath, newInputPath, countA);
+
+            numberOfParts = splitA(conf, fsInput, inputPath, newInputPath,
+                                countB);
+
 
             fsInput.close();
 
@@ -614,7 +711,7 @@ public class KronMatrix {
 
             // Delete the output directory if it already exists.
             fs.delete(outputPath, true);
-            fs.close();
+            //fs.close();
 
             // Create job
             Job job = new Job(conf, "KroneckerProduct");
@@ -639,7 +736,7 @@ public class KronMatrix {
             job.setOutputFormatClass(TextOutputFormat.class);
 
             // Input
-            FileInputFormat.addInputPath(job, inputPath);
+            FileInputFormat.addInputPath(job, newInputPath);
 
             // Output
             FileOutputFormat.setOutputPath(job, outputPath);
@@ -647,6 +744,9 @@ public class KronMatrix {
             // Execute job
             job.waitForCompletion(true);
 
+            // Delete new input format folder
+            fs.delete(newInputPath, true);
+            fs.close();
 
         } catch (Exception e) {
             System.out.println(e);
