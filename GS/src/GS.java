@@ -21,6 +21,8 @@ package gs;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -74,6 +76,8 @@ public class GS {
         Process pr;
         BufferedWriter bw;
         File fl;
+        BufferedReader br;
+        String line;
 
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(conf);
@@ -93,9 +97,10 @@ public class GS {
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
 
+            bw.write("#A," + Long.toString(n) + ",1\n");
             for (long i = 0; i < n; i++) {
-                bw.write(Long.toString(i) + "," + Double.toString(1
-                        / Math.sqrt(n)) + "\n");
+                bw.write("A," + Long.toString(i) + ",0," + Double.toString(1
+                        / Math.sqrt(n)) + "j0" + "\n");
             }
             bw.close();
 
@@ -156,6 +161,25 @@ public class GS {
                 System.out.println("End of the Step " + (i + 1));
             }
 
+            // Put the file with the header first.
+            pt = new Path(PATH + psiT);
+            status = fs.listStatus(pt);
+            for (FileStatus stat : status) {
+
+                if (stat.getPath().toString().indexOf("part-") > -1) {
+                    br = new BufferedReader(new InputStreamReader(fs.open(stat.
+                            getPath())));
+
+                    line = br.readLine();
+                    if (line.indexOf("#") > -1) {
+                        fs.rename(stat.getPath(), new Path(stat.getPath().
+                                toString().replaceAll("part-", "-")));
+                        break;
+                    }
+                }
+
+            }
+
             // Merge psiT output files.
             fu.copyMerge(fs, new Path(PATH + psiT), fs, new Path(PATH + psiT
                     + "_" + Integer.toString(N) + "/part-0"), true, conf, null);
@@ -164,7 +188,7 @@ public class GS {
             // Calculate the probability distribution function
             pdf = "pdf";
             pr = rt.exec("hadoop jar " + JAR_DIR
-                    + "grover.jar grover.PDF " + PATH + psiT + "_"
+                    + "operations.jar operations.AbsSquare " + PATH + psiT + "_"
                     + Integer.toString(N) + " " + PATH + pdf);
 
             pr.waitFor();
@@ -188,7 +212,7 @@ public class GS {
 
             // Create a chart of the probability distribution function of psiT
             pr = rt.exec("hadoop jar " + JAR_DIR
-                    + "grover.jar grover.PDFChart " + OUTPUT_DIR + pdf
+                    + "operations.jar operations.PDFChart 1 " + OUTPUT_DIR + pdf
                     + "/part-r-00000" + " " + OUTPUT_DIR);
 
             pr.waitFor();
@@ -198,8 +222,8 @@ public class GS {
 
 
             // Delete the PATH directory.
-            pt = new Path(PATH);
-            fs.delete(pt, true);
+            //pt = new Path(PATH);
+            //fs.delete(pt, true);
 
             fs.close();
 

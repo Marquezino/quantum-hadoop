@@ -15,7 +15,7 @@
  */
 
 
-package mult;
+package operations;
 
 import java.io.IOException;
 import java.util.ArrayList;

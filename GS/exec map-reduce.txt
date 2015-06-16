@@ -1,11 +1,16 @@
 ####################################################################################################
 # Operações ########################################################################################
 
-hadoop jar grover.jar grover.Grover /user/david/psi /user/david/psi_t 2
+hadoop jar operations.jar operations.MultMatrix /user/david/mult /user/david/tmp /user/david/mult-out B
+hadoop jar operations.jar operations.KronMatrix /user/david/multKron /user/david/multKron-out B
+hadoop jar operations.jar operations.NormMatrix /user/david/norm /user/david/norm-out
+hadoop jar operations.jar operations.AbsSquare /user/david/pdf /user/david/pdf-out
+hadoop jar operations.jar operations.Reshape 2,2,10,10,2,2,10,10 /user/david/reshape /user/david/reshape-out
+hadoop jar operations.jar operations.SumAxis 1,2,5,6 ?,?,?,?,?,?,5,5 /user/david/sumaxis /user/david/sumaxis-out
+hadoop jar operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
+java -cp $CLASSPATH:operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
 
-hadoop jar grover.jar grover.PDF /user/david/pdf /user/david/pdf-out
-
-hadoop jar grover.jar grover.PDFChart pdf-out/part-r-00000 pdf-out/../
+hadoop jar grover.jar grover.Grover psi psi-out 4
 
 hadoop jar gs.jar gs.GS
 
@@ -17,29 +22,26 @@ hadoop jar gs.jar gs.GS
 hadoop dfs -copyToLocal /user/david/psi_t psi_t
 adoop dfs -rmr /user/david/psi_t
 
-hadoop dfs -copyToLocal /user/david/pdf-out pdf-out
-adoop dfs -rmr /user/david/pdf-out
-
 hadoop dfs -copyToLocal /user/david/gs_tmp gs_tmp
 hadoop dfs -rmr /user/david/gs_tmp/*
-
 
 ####################################################################################################
 
 ####################################################################################################
 # Criando um arquivo .jar ##########################################################################
 
-mkdir src/grover_class
+mkdir bin
+mkdir bin/grover_class
 
-javac -d src/grover_class/ src/Grover.java src/PDF.java src/PDFChart.java
+javac -d bin/grover_class/ src/Grover.java
 
-jar -cvf grover.jar -C src/grover_class/ .
+jar -cvf grover.jar -C bin/grover_class/ .
 
 
-mkdir src/gs_class
+mkdir bin/gs_class
 
-javac -d src/gs_class/ src/GS.java
+javac -d bin/gs_class/ src/GS.java
 
-jar -cvf gs.jar -C src/gs_class/ .
+jar -cvf gs.jar -C bin/gs_class/ .
 
 ####################################################################################################

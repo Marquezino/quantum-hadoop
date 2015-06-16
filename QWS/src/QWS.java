@@ -64,7 +64,8 @@ public class QWS {
     private static final String JAR_DIR = "/home/david/Desktop/java/QWS/";
 
     /**
-     * The folder path where the result will be stored.
+     * The folder path where the result will be stored. Should be a empty folder
+	 * because this ALL DATA will be deleted.
      */
     private static final String OUTPUT_DIR =
             "/home/david/Desktop/java/QWS/Result/";
@@ -114,14 +115,11 @@ public class QWS {
 
                 if (!(line.equals("")) && !(String.valueOf(line.charAt(0)).
                         equals(" "))) {
-                    //System.out.println(line);
                     numberU++;
                 }
             }
 
             br.close();
-
-            //System.out.println("numberU="+numberU);
 
             uDir = new String[numberU];
 
@@ -155,8 +153,6 @@ public class QWS {
             }
 
             br.close();
-
-            //System.out.println("psi="+psi);
 
             pt = new Path(WORK_DIR + "psi");
             fs.delete(pt, true);
@@ -237,8 +233,9 @@ public class QWS {
                     }
 
                     pr = rt.exec("hadoop jar " + JAR_DIR
-                            + "mult.jar mult.MultMatrix " + psiT + "_tmp" + " "
-                            + WORK_DIR + "tmp" + " " + psiT + " B");
+                            + "operations.jar operations.MultMatrix " + psiT
+                            + "_tmp" + " " + WORK_DIR + "tmp" + " " + psiT
+                            + " B");
 
 
                     pr.waitFor();
@@ -256,8 +253,8 @@ public class QWS {
             pt = new Path(psiTNorm);
             fs.delete(pt, true);
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.NormMatrix "
-                    + psiT + " " + psiTNorm);
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "NormMatrix " + psiT + " " + psiTNorm);
 
             pr.waitFor();
             pr.destroy();

@@ -1,5 +1,5 @@
 /*
- * QW.java    1.1 2015/04/20
+ * QW.java    1.2 2015/06/15
  *
  * Copyright (C) 2015 GNU General Public License
  *
@@ -19,6 +19,9 @@ package qw;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,17 +36,44 @@ import org.apache.hadoop.conf.Configuration;
     dimensional lattice using Apache Hadoop.
  *
  * @version
-    1.1 20 Apr 2015  * @author
+    1.2 15 Jun 2015  * @author
     David Souza  */
 
 
 public class QW {
 
+    /**
+     * The dimensions of the two dimensional lattice.
+     */
     private static final int SIZE = 5;
+
+    /**
+     * The number of steps that will be executed in the simulation.
+     */
     private static final int STEPS = 8;
-    private static final String PATH = "qw_tmp/";
+
+    /**
+     * The path in the HDFS where the program will store the data.
+     */
+    private static final String WORK_DIR = "qw_tmp/";
+
+    /**
+     * The folder path where the .jar files are stored.
+     */
     private static final String JAR_DIR = "/home/david/Desktop/java/QW/";
-    private static final boolean CLEAN_FOLDERS = false;
+
+    /**
+     * The folder path where the result will be stored. Should be a empty folder
+     * because this ALL DATA will be deleted.
+     */
+    private static final String OUTPUT_DIR =
+            "/home/david/Desktop/java/QW/Result/";
+
+    /*
+     * Set for true to delete unnecessary files during the execution to increase
+     * available storage space.
+     */
+    private static final boolean CLEAN_FOLDERS = true;
 
 
     public static void main(String[] args) throws Exception {
@@ -69,8 +99,13 @@ public class QW {
         String walkersStateT;
         String gWalkers;
         String w2BGWalkers;
+        String line;
         String walkersStateNorm;
+        String absSquare;
+        String reshape;
+        String pdf;
         BufferedWriter bw;
+        BufferedReader br;
         Runtime rt;
         Process pr;
 
@@ -86,15 +121,21 @@ public class QW {
 
             fs = FileSystem.get(conf);
             fu = new FileUtil();
+            rt = Runtime.getRuntime();
 
-            // Delete the PATH directory if exists. And create a new one empty.
-            pt = new Path(PATH);
+            System.out.println("The matrices are being generated...");
+
+            /*
+             * Delete the WORK_DIR directory if exists. And create a new one
+             * empty.
+             */
+            pt = new Path(WORK_DIR);
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
             // Start of the hadamard
             hadamardA = "hadamardA";
-            pt = new Path(PATH + hadamardA);
+            pt = new Path(WORK_DIR + hadamardA);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#A,2,2\n");
@@ -105,7 +146,7 @@ public class QW {
             bw.close();
 
             hadamardB = "hadamardB";
-            pt = new Path(PATH + hadamardB);
+            pt = new Path(WORK_DIR + hadamardB);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#B,2,2\n");
@@ -118,24 +159,23 @@ public class QW {
             hadamard = "hadamard";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + hadamard);
+            pt = new Path(WORK_DIR + hadamard);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + hadamard + "_input");
+            pt = new Path(WORK_DIR + hadamard + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
             // Move hadamardA and hadamardB to hadamard_input
-            fs.rename(new Path(PATH + hadamardA), new Path(PATH + hadamard
-                    + "_input"));
-            fs.rename(new Path(PATH + hadamardB), new Path(PATH + hadamard
-                    + "_input"));
+            fs.rename(new Path(WORK_DIR + hadamardA), new Path(WORK_DIR
+                    + hadamard + "_input"));
+            fs.rename(new Path(WORK_DIR + hadamardB), new Path(WORK_DIR
+                    + hadamard + "_input"));
 
-            rt = Runtime.getRuntime();
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.KronMatrix "
-                    + PATH + hadamard + "_input" + " " + PATH + hadamard
-                    + " A");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "KronMatrix " + WORK_DIR + hadamard + "_input" + " "
+                    + WORK_DIR + hadamard + " A");
 
             pr.waitFor();
             pr.destroy();
@@ -149,7 +189,7 @@ public class QW {
             // End of the hadamard. Start of the operatorCoinW1
 
             identity = "identity";
-            pt = new Path(PATH + identity);
+            pt = new Path(WORK_DIR + identity);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#B," + Integer.toString(SIZE * SIZE) + ","
@@ -165,39 +205,39 @@ public class QW {
             operatorCoinW1 = "operatorCoinW1";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + operatorCoinW1);
+            pt = new Path(WORK_DIR + operatorCoinW1);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + operatorCoinW1 + "_input");
+            pt = new Path(WORK_DIR + operatorCoinW1 + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
 
-            fs.rename(new Path(PATH + identity), new Path(PATH
+            fs.rename(new Path(WORK_DIR + identity), new Path(WORK_DIR
                     + operatorCoinW1 + "_input"));
 
-            status = fs.listStatus(new Path(PATH + hadamard));
+            status = fs.listStatus(new Path(WORK_DIR + hadamard));
             for (FileStatus stat : status) {
 
                 if (stat.getPath().toString().indexOf("part-") > -1) {
 
-                    fs.rename(stat.getPath(), new Path(PATH + operatorCoinW1
+                    fs.rename(stat.getPath(), new Path(WORK_DIR + operatorCoinW1
                             + "_input"));
                 }
 
             }
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.KronMatrix "
-                    + PATH + operatorCoinW1 + "_input" + " " + PATH
-                    + operatorCoinW1 + " B");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "KronMatrix " + WORK_DIR + operatorCoinW1 + "_input" + " "
+                    + WORK_DIR + operatorCoinW1 + " B");
 
             pr.waitFor();
             pr.destroy();
 
             if (CLEAN_FOLDERS) {
                 fs.delete(pt, true);
-                pt = new Path(PATH + hadamard);
+                pt = new Path(WORK_DIR + hadamard);
                 fs.delete(pt, true);
             }
 
@@ -210,7 +250,7 @@ public class QW {
              */
 
             operatorShiftW1 = "operatorShiftW1";
-            pt = new Path(PATH + operatorShiftW1);
+            pt = new Path(WORK_DIR + operatorShiftW1);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#A," + Long.toString((long) (4 * Math.pow(SIZE, 2)))
@@ -258,32 +298,32 @@ public class QW {
             operatorW1A = "operatorW1A";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + operatorW1A);
+            pt = new Path(WORK_DIR + operatorW1A);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + operatorW1A + "_input");
+            pt = new Path(WORK_DIR + operatorW1A + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
 
-            fs.rename(new Path(PATH + operatorShiftW1), new Path(PATH
+            fs.rename(new Path(WORK_DIR + operatorShiftW1), new Path(WORK_DIR
                     + operatorW1A + "_input"));
 
-            status = fs.listStatus(new Path(PATH + operatorCoinW1));
+            status = fs.listStatus(new Path(WORK_DIR + operatorCoinW1));
             for (FileStatus stat : status) {
 
                 if (stat.getPath().toString().indexOf("part-") > -1) {
 
-                    fs.rename(stat.getPath(), new Path(PATH + operatorW1A
+                    fs.rename(stat.getPath(), new Path(WORK_DIR + operatorW1A
                             + "_input"));
                 }
 
             }
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix "
-                    + PATH + operatorW1A + "_input" + " " + PATH + "tmp" + " "
-                    + PATH + operatorW1A + " A");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "MultMatrix " + WORK_DIR + operatorW1A + "_input" + " "
+                    + WORK_DIR + "tmp" + " " + WORK_DIR + operatorW1A + " A");
 
             pr.waitFor();
             pr.destroy();
@@ -294,20 +334,20 @@ public class QW {
             operatorW1B = "operatorW1B";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + operatorW1B);
+            pt = new Path(WORK_DIR + operatorW1B);
             fs.delete(pt, true);
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.MultMatrix "
-                    + PATH + operatorW1A + "_input" + " " + PATH + "tmp" + " "
-                    + PATH + operatorW1B + " B");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "MultMatrix " + WORK_DIR + operatorW1A + "_input" + " "
+                    + WORK_DIR + "tmp" + " " + WORK_DIR + operatorW1B + " B");
 
             pr.waitFor();
             pr.destroy();
 
             if (CLEAN_FOLDERS) {
-                pt = new Path(PATH + operatorCoinW1);
+                pt = new Path(WORK_DIR + operatorCoinW1);
                 fs.delete(pt, true);
-                pt = new Path(PATH + operatorW1A + "_input");
+                pt = new Path(WORK_DIR + operatorW1A + "_input");
                 fs.delete(pt, true);
             }
 
@@ -320,7 +360,7 @@ public class QW {
 
             identityW2A = "identityW2A";
 
-            pt = new Path(PATH + identityW2A);
+            pt = new Path(WORK_DIR + identityW2A);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#B," + Integer.toString(4 * SIZE * SIZE) + ","
@@ -335,39 +375,39 @@ public class QW {
             operatorW2A = "operatorW2A";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + operatorW2A);
+            pt = new Path(WORK_DIR + operatorW2A);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + operatorW2A + "_input");
+            pt = new Path(WORK_DIR + operatorW2A + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
 
-            fs.rename(new Path(PATH + identityW2A), new Path(PATH
+            fs.rename(new Path(WORK_DIR + identityW2A), new Path(WORK_DIR
                     + operatorW2A + "_input"));
 
-            status = fs.listStatus(new Path(PATH + operatorW1A));
+            status = fs.listStatus(new Path(WORK_DIR + operatorW1A));
             for (FileStatus stat : status) {
 
                 if (stat.getPath().toString().indexOf("part-") > -1) {
 
-                    fs.rename(stat.getPath(), new Path(PATH + operatorW2A
+                    fs.rename(stat.getPath(), new Path(WORK_DIR + operatorW2A
                             + "_input"));
                 }
 
             }
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.KronMatrix "
-                    + PATH + operatorW2A + "_input" + " " + PATH
-                    + operatorW2A + " A");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "KronMatrix " + WORK_DIR + operatorW2A + "_input" + " "
+                    + WORK_DIR + operatorW2A + " A");
 
             pr.waitFor();
             pr.destroy();
 
             if (CLEAN_FOLDERS) {
                 fs.delete(pt, true);
-                pt = new Path(PATH + operatorW1A);
+                pt = new Path(WORK_DIR + operatorW1A);
                 fs.delete(pt, true);
             }
 
@@ -376,7 +416,7 @@ public class QW {
 
             identityW2B = "identityW2B";
 
-            pt = new Path(PATH + identityW2B);
+            pt = new Path(WORK_DIR + identityW2B);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#A," + Integer.toString(4 * SIZE * SIZE) + ","
@@ -391,39 +431,39 @@ public class QW {
             operatorW2B = "operatorW2B";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + operatorW2B);
+            pt = new Path(WORK_DIR + operatorW2B);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + operatorW2B + "_input");
+            pt = new Path(WORK_DIR + operatorW2B + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
 
-            fs.rename(new Path(PATH + identityW2B), new Path(PATH + operatorW2B
-                    + "_input"));
+            fs.rename(new Path(WORK_DIR + identityW2B), new Path(WORK_DIR
+                    + operatorW2B + "_input"));
 
-            status = fs.listStatus(new Path(PATH + operatorW1B));
+            status = fs.listStatus(new Path(WORK_DIR + operatorW1B));
             for (FileStatus stat : status) {
 
                 if (stat.getPath().toString().indexOf("part-") > -1) {
 
-                    fs.rename(stat.getPath(), new Path(PATH + operatorW2B
+                    fs.rename(stat.getPath(), new Path(WORK_DIR + operatorW2B
                             + "_input"));
                 }
 
             }
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.KronMatrix "
-                    + PATH + operatorW2B + "_input" + " " + PATH
-                    + operatorW2B + " A");
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "KronMatrix " + WORK_DIR + operatorW2B + "_input" + " "
+                    + WORK_DIR + operatorW2B + " A");
 
             pr.waitFor();
             pr.destroy();
 
             if (CLEAN_FOLDERS) {
                 fs.delete(pt, true);
-                pt = new Path(PATH + operatorW1B);
+                pt = new Path(WORK_DIR + operatorW1B);
                 fs.delete(pt, true);
             }
 
@@ -432,7 +472,7 @@ public class QW {
             // End of the operatorW2A and operatorW2B. Start of the operatorG
 
             operatorG = "operatorG";
-            pt = new Path(PATH + operatorG);
+            pt = new Path(WORK_DIR + operatorG);
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
             bw.write("#A," + Long.toString((long) (16 * Math.pow(SIZE, 4)))
@@ -443,27 +483,6 @@ public class QW {
                         + ",1.0j0");
             }
 
-            // Only if value in bw.write != 1.0j0
-            /* for (int j1=0; j1<2; j1++) {
-                for (int k1=0; k1<2; k1++) {
-                    for (int j2=0; j2<2; j2++) {
-                        for (int k2=0; k2<2; k2++) {
-                            for (int x=0; x<SIZE; x++) {
-                                for (int y=0; y<SIZE; y++) {
-
-                                    long line = ((((((j1*2 + k1)*SIZE + x)
-                                                    * SIZE + y) * 2 + j2) * 2
-                                                    + k2) * SIZE + x) * SIZE
-                                                    + y;
-
-                                    bw.write("\nB," + Long.toString(line) + ","
-                                            + Long.toString(line) + ",1.0j0");
-                                }
-                            }
-                        }
-                    }
-                }
-            } */
             bw.close();
 
             System.out.println("End of the operatorG.");
@@ -472,10 +491,10 @@ public class QW {
 
             walkersState = "walkersState";
 
-            pt = new Path(PATH + walkersState);
+            pt = new Path(WORK_DIR + walkersState);
             fs.delete(pt, true);
             fs.mkdirs(pt);
-            pt = new Path(PATH + walkersState + "/part-r");
+            pt = new Path(WORK_DIR + walkersState + "/part-r");
 
             bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
                     true)));
@@ -536,15 +555,15 @@ public class QW {
             walkersStateT = "walkersStateT";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + walkersStateT);
+            pt = new Path(WORK_DIR + walkersStateT);
             fs.delete(pt, true);
 
             // Delete the input directory if exists and create a new one.
-            pt = new Path(PATH + walkersStateT + "_input");
+            pt = new Path(WORK_DIR + walkersStateT + "_input");
             fs.delete(pt, true);
             fs.mkdirs(pt);
 
-            status = fs.listStatus(new Path(PATH + walkersState));
+            status = fs.listStatus(new Path(WORK_DIR + walkersState));
             for (FileStatus stat : status) {
 
                 if (stat.getPath().toString().indexOf("part-") > -1) {
@@ -554,9 +573,9 @@ public class QW {
 
             }
 
-            fs.rename(new Path(PATH + operatorG), pt);
+            fs.rename(new Path(WORK_DIR + operatorG), pt);
 
-            status = fs.listStatus(new Path(PATH + operatorW2A));
+            status = fs.listStatus(new Path(WORK_DIR + operatorW2A));
             for (int i = 0; i < status.length; i++) {
 
                 if (status[i].getPath().toString().indexOf("part-r") > -1) {
@@ -577,7 +596,7 @@ public class QW {
 
             }
 
-            status = fs.listStatus(new Path(PATH + operatorW2B));
+            status = fs.listStatus(new Path(WORK_DIR + operatorW2B));
             for (int i = 0; i < status.length; i++) {
 
                 if (status[i].getPath().toString().indexOf("part-r") > -1) {
@@ -603,6 +622,9 @@ public class QW {
 
             startTime = System.nanoTime();
 
+            System.out.println("The matrices generation is complete.\n"
+                    + "Executing the steps...");
+
             gWalkers = "gWalkers";
             w2BGWalkers = "w2BGWalkers";
 
@@ -610,7 +632,7 @@ public class QW {
 
                 if (i > 0) {
 
-                    pt = new Path(PATH + walkersStateT + "_input");
+                    pt = new Path(WORK_DIR + walkersStateT + "_input");
                     status = fs.listStatus(pt);
                     for (FileStatus stat : status) {
 
@@ -620,7 +642,7 @@ public class QW {
 
                     }
 
-                    status = fs.listStatus(new Path(PATH + walkersStateT));
+                    status = fs.listStatus(new Path(WORK_DIR + walkersStateT));
                     for (FileStatus stat : status) {
 
                         if (stat.getPath().toString().indexOf("part-r") > -1) {
@@ -629,18 +651,18 @@ public class QW {
 
                     }
 
-                    pt = new Path(PATH + walkersStateT);
+                    pt = new Path(WORK_DIR + walkersStateT);
                     fs.delete(pt, true);
 
                 }
 
-                pt = new Path(PATH + gWalkers);
+                pt = new Path(WORK_DIR + gWalkers);
                 fs.delete(pt, true);
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
-                        + "mult.jar mult.MultMatrix " + PATH + walkersStateT
-                        + "_input" + " " + PATH + "tmp" + " " + PATH
-                        + gWalkers + " B");
+                        + "operations.jar operations.MultMatrix " + WORK_DIR
+                        + walkersStateT + "_input" + " " + WORK_DIR + "tmp"
+                        + " " + WORK_DIR + gWalkers + " B");
 
 
                 pr.waitFor();
@@ -648,8 +670,7 @@ public class QW {
 
                 // End of G * walkersStateT
 
-
-                pt = new Path(PATH + operatorW2B);
+                pt = new Path(WORK_DIR + operatorW2B);
 
                 status = fs.listStatus(pt);
                 for (FileStatus stat : status) {
@@ -660,7 +681,7 @@ public class QW {
 
                 }
 
-                status = fs.listStatus(new Path(PATH + gWalkers));
+                status = fs.listStatus(new Path(WORK_DIR + gWalkers));
                 for (FileStatus stat : status) {
 
                     if (stat.getPath().toString().indexOf("part-r") > -1) {
@@ -669,13 +690,13 @@ public class QW {
 
                 }
 
-                pt = new Path(PATH + w2BGWalkers);
+                pt = new Path(WORK_DIR + w2BGWalkers);
                 fs.delete(pt, true);
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
-                        + "mult.jar mult.MultMatrix " + PATH + operatorW2B
-                        + " " + PATH + "tmp" + " " + PATH + w2BGWalkers
-                        + " B");
+                        + "operations.jar operations.MultMatrix " + WORK_DIR
+                        + operatorW2B + " " + WORK_DIR + "tmp" + " " + WORK_DIR
+                        + w2BGWalkers + " B");
 
 
                 pr.waitFor();
@@ -683,7 +704,7 @@ public class QW {
 
                 // End of W2B * gWalkers
 
-                pt = new Path(PATH + operatorW2A);
+                pt = new Path(WORK_DIR + operatorW2A);
 
                 status = fs.listStatus(pt);
                 for (FileStatus stat : status) {
@@ -694,7 +715,7 @@ public class QW {
 
                 }
 
-                status = fs.listStatus(new Path(PATH + w2BGWalkers));
+                status = fs.listStatus(new Path(WORK_DIR + w2BGWalkers));
                 for (FileStatus stat : status) {
 
                     if (stat.getPath().toString().indexOf("part-r") > -1) {
@@ -704,9 +725,9 @@ public class QW {
                 }
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
-                        + "mult.jar mult.MultMatrix " + PATH + operatorW2A
-                        + " " + PATH + "tmp" + " " + PATH + walkersStateT
-                        + " B");
+                        + "operations.jar operations.MultMatrix " + WORK_DIR
+                        + operatorW2A + " " + WORK_DIR + "tmp" + " " + WORK_DIR
+                        + walkersStateT + " B");
 
 
                 pr.waitFor();
@@ -717,43 +738,157 @@ public class QW {
                 System.out.println("End of the Step " + (i + 1));
             }
 
-            if (CLEAN_FOLDERS) {
-                pt = new Path(PATH + operatorW2A);
-                fs.delete(pt, true);
-                pt = new Path(PATH + operatorW2B);
-                fs.delete(pt, true);
-                pt = new Path(PATH + walkersState);
-                fs.delete(pt, true);
-                pt = new Path(PATH + walkersStateT + "_input");
-                fs.delete(pt, true);
-                pt = new Path(PATH + gWalkers);
-                fs.delete(pt, true);
-                pt = new Path(PATH + w2BGWalkers);
-                fs.delete(pt, true);
-            }
-
             System.out.println("End of the walkersStateT.");
 
             // End of the walkersState. Start of the walkersStateNorm
 
+            // Put the file with the header first.
+            pt = new Path(WORK_DIR + walkersStateT);
+            status = fs.listStatus(pt);
+            for (FileStatus stat : status) {
+
+                if (stat.getPath().toString().indexOf("part-") > -1) {
+                    br = new BufferedReader(new InputStreamReader(fs.open(stat.
+                            getPath())));
+
+                    line = br.readLine();
+                    if (line.indexOf("#") > -1) {
+                        fs.rename(stat.getPath(), new Path(stat.getPath().
+                                toString().replaceAll("part-", "-")));
+                        break;
+                    }
+                }
+
+            }
+
+            fs.rename(pt, new Path(WORK_DIR + walkersStateT + "splitted"));
+
+            // Merge walkersStateT output files.
+            fu.copyMerge(fs, new Path(WORK_DIR + walkersStateT + "splitted"),
+                    fs, new Path(WORK_DIR + walkersStateT + "/part-0"), true,
+                    conf, null);
+
             walkersStateNorm = "walkersStateNorm";
 
             // Delete the output directory if exists.
-            pt = new Path(PATH + walkersStateNorm);
+            pt = new Path(WORK_DIR + walkersStateNorm);
             fs.delete(pt, true);
 
-            pr = rt.exec("hadoop jar " + JAR_DIR + "mult.jar mult.NormMatrix "
-                    + PATH + walkersStateT + " " + PATH + walkersStateNorm);
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "NormMatrix " + WORK_DIR + walkersStateT + " " + WORK_DIR
+                    + walkersStateNorm);
 
             pr.waitFor();
             pr.destroy();
 
             System.out.println("End of the walkersStateNorm.");
 
-            fs.close();
-
             // End of the walkersStateNorm
 
+            // Start of the absSquare
+            absSquare = "absSquare";
+
+            // Delete the output directory if exists.
+            pt = new Path(WORK_DIR + absSquare);
+            fs.delete(pt, true);
+
+            /*
+             * Computes the square of the absolute value for each element of the
+             * array.
+             */
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "AbsSquare " + WORK_DIR + walkersStateT + " " + WORK_DIR
+                    + absSquare);
+
+            pr.waitFor();
+            pr.destroy();
+
+            // End of the absSquare
+
+            // Start of the reshape
+            reshape = "reshape";
+
+            // Delete the output directory if exists.
+            pt = new Path(WORK_DIR + reshape);
+            fs.delete(pt, true);
+
+            // Gives a new shape for the array.
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "Reshape 2,2," + Integer.toString(SIZE) + ","
+                    + Integer.toString(SIZE) + ",2,2," + Integer.toString(SIZE)
+                    + "," + Integer.toString(SIZE) + " " + WORK_DIR + absSquare
+                    + " " + WORK_DIR + reshape);
+
+            pr.waitFor();
+            pr.destroy();
+
+            // End of the reshape
+
+            /*
+             * Start of the sumAxis. In this case the output of SunAxis function
+             * will be the PDF of walkersStateT when the particle 2 is in the
+             * position (SIZE/2, SIZE/2)
+             */
+            pdf = "pdf";
+
+            // Delete the output directory if exists.
+            pt = new Path(WORK_DIR + pdf);
+            fs.delete(pt, true);
+
+            /*
+             * Sum the elements of the array over given axes, for a specific
+             * position.
+             */ 
+            pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
+                    + "SumAxis 1,2,5,6 ?,?,?,?,?,?,"
+                    + Integer.toString((int)(SIZE/2)) + ","
+                    + Integer.toString((int)(SIZE/2)) + " " + WORK_DIR + reshape
+                    + " " + WORK_DIR + pdf);
+
+            pr.waitFor();
+            pr.destroy();
+
+            // End of the sumAxis
+
+            System.out.println("End of the pdf.");
+
+            // Delete the OUTPUT_DIR if it exists.
+            fu.fullyDelete(new File(OUTPUT_DIR));
+
+            // Copy the result from HDFS to local.
+            pt = new Path(WORK_DIR + walkersStateT);
+            fu.copy(fs, pt, new File(OUTPUT_DIR + "walkersStateT"), false,
+                    conf);
+            pt = new Path(WORK_DIR + walkersStateNorm);
+            fu.copy(fs, pt, new File(OUTPUT_DIR + "walkersStateNorm"), false,
+                    conf);
+            pt = new Path(WORK_DIR + pdf);
+            fu.copy(fs, pt, new File(OUTPUT_DIR + "pdf"), false, conf);
+
+            // PDF Chart for the axis 1
+            pr = rt.exec("java -cp " + System.getenv("CLASSPATH") + ":"
+                    + JAR_DIR + "operations.jar operations.PDFChart 1 "
+                    + OUTPUT_DIR + "pdf/part-r-00000 " + OUTPUT_DIR);
+
+            pr.waitFor();
+            pr.destroy();
+
+            // PDF Chart for the axis 2
+            pr = rt.exec("java -cp " + System.getenv("CLASSPATH") + ":"
+                    + JAR_DIR + "operations.jar operations.PDFChart 2 "
+                    + OUTPUT_DIR + "pdf/part-r-00000 " + OUTPUT_DIR);
+
+            pr.waitFor();
+            pr.destroy();
+
+            System.out.println("PDF charts created.");
+
+            // Delete the WORK_DIR directory.
+            pt = new Path(WORK_DIR);
+            fs.delete(pt, true);
+
+
+            fs.close();
 
             System.out.println("Finished!");
 

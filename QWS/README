@@ -41,24 +41,20 @@ JAR_DIR and OUTPUT_DIR.
 	are stored.
 
 -OUTPUT_DIR: The folder path where the result
-	will be stored.
+	will be stored. Should be a empty folder
+	because this ALL DATA will be deleted.
 
 
 Compile and run
 ---------------
 
-To compile the code you need to know the folder
-path where the Apache Hadoop was installed.
-Change HADOOP_DIR for the right path.
-
-Open the Terminal and go to the folder where
-QWS.java are stored. Now, execute the follow
+Open the Terminal and go to the location where
+the folder src is stored. Now, execute the follow
 commands:
 
-mkdir qws_class
-javac -cp HADOOP_DIR/*:HADOOP_DIR/lib/* -d \
-qws_class/ QWS.java
-jar -cvf qws.jar -C qws_class/ .
+mkdir bin
+javac -d bin/ src/QWS.java
+jar -cvf qws.jar -C bin/ .
 
 To run execute the follow command:
 

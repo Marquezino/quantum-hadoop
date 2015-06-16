@@ -51,17 +51,18 @@ Compile and run
 To compile the code you need to set the
 environment variable HADOOP_CLASSPATH.
 
-Open the Terminal and go to the folder where
-Grover.java and GS.java are stored. Now, execute
+Open the Terminal and go to the location where
+the folder src is stored. Now, execute
 the follow commands:
 
-mkdir grover_class
-javac -d grover_class/ Grover.java PDF.java \
-PDFChart.java
-jar -cvf grover.jar -C grover_class/ .
-mkdir gs_class
-javac -d gs_class/ GS.java
-jar -cvf gs.jar -C gs_class/ .
+mkdir bin
+mkdir bin/grover_class
+javac -d bin/grover_class/ src/Grover.java
+jar -cvf grover.jar -C bin/grover_class/ .
+mkdir bin/gs_class
+javac -d bin/gs_class/ src/GS.java
+jar -cvf gs.jar -C bin/gs_class/ .
+
 
 To run execute the follow command:
 

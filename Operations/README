@@ -1,4 +1,4 @@
-Operations Version 1.0 2015-05-23
+Operations Version 1.2 2015-06-14
 
 
 What is it?
@@ -26,7 +26,7 @@ To run the operations, you will need same
 parameters:
 
 -HDFS_INPUT_FOLDER: The directory in the HDFS
-	where are the input files.
+	where the input files are.
 
 -HDFS_TEMPORARY_FOLDER: A path to a absent
 	ditectory in the HDFS. It will be deleted
@@ -38,33 +38,65 @@ parameters:
 
 -TYPE_OF_MATRIX: If is the left matrix (A) or the
 	right matrix (B).
+	
+-NEW_SHAPE: The new shape separated by the
+    character comma.
+
+-AXIS: The axis to generate a 2D Chart.
+
+-LOCAL_INPUT_FILE: A local path where the
+    input file is.
+
+-LOCAL_OUTPUT_FOLDER: A local directory where the
+    output will be stored.
+
+-$CLASSPATH: This is a environment variable that should have the path to
+    JFreeChart and JCommon .jar files.
 
 
 Compile and run
 ---------------
 
-To compile the code you need to know the folder
-path where the Apache Hadoop was installed.
-Change HADOOP_DIR for the right path.
-
 Open the Terminal and go to the folder where
-MultMatrix.java, KronMatrix.java and
-NormMatrix.java are stored. Now, execute the follow
-commands:
+MultMatrix.java, KronMatrix.java,
+NormMatrix.java, absSquare.java, Reshape.java
+and PDFChart.java are stored. Now, execute the
+follow commands:
 
-mkdir mult_class
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d mult_class/ \
-MultMatrix.java KronMatrix.java NormMatrix.java
-jar -cvf mult.jar -C mult_class/ .
+mkdir operations_class
+javac -d operations_class/ MultMatrix.java \
+KronMatrix.java NormMatrix.java Reshape.java \
+absSquare.java PDFChart.java
+jar -cvf operations.jar -C operations_class/ .
+
 
 To run execute the follow command:
 
 Matrix Multiplication
-hadoop jar mult.jar mult.MultMatrix HDFS_INPUT_FOLDER HDFS_TEMPORARY_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+hadoop jar operations.jar operations.MultMatrix HDFS_INPUT_FOLDER \
+HDFS_TEMPORARY_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
 
 Kronecker Product
-hadoop jar mult.jar mult.KronMatrix HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+hadoop jar operations.jar operations.KronMatrix HDFS_INPUT_FOLDER \
+HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
 
 Norm
-hadoop jar mult.jar mult.NormMatrix HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER
+hadoop jar operations.jar operations.NormMatrix HDFS_INPUT_FOLDER \
+HDFS_OUTPUT_FOLDER
+
+absSquare
+hadoop jar operations.jar operations.absSquare HDFS_INPUT_FOLDER \
+HDFS_OUTPUT_FOLDER
+
+Reshape
+hadoop jar operations.jar operations.Reshape NEW_SHAPE HDFS_INPUT_FOLDER \
+HDFS_OUTPUT_FOLDER
+
+PDFChart
+hadoop jar operations.jar operations.PDFChart AXIS LOCAL_INPUT_FILE \
+LOCAL_OUTPUT_FOLDER
+or
+java -cp $CLASSPATH:operations.jar operations.PDFChart AXIS LOCAL_INPUT_FILE \
+LOCAL_OUTPUT_FOLDER
+
 

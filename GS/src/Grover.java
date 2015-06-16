@@ -66,11 +66,20 @@ public class Grover {
                 throws IOException {
 
             LongWritable outputKey = new LongWritable();
+            String[] vals;
 
-            for (long i = 0; i < COUNT_PSI; i++) {
-                outputKey.set(i);
+            vals = value.toString().split(",");
+
+            if (!(vals[0].equals("#A") || vals[0].equals("#B"))) {
+
+                for (long i = 0; i < COUNT_PSI; i++) {
+                    outputKey.set(i);
+                    output.collect(outputKey, value);
+
+                }
+            } else {
+                outputKey.set(-1);
                 output.collect(outputKey, value);
-
             }
         }
     }
@@ -89,65 +98,83 @@ public class Grover {
                 throws IOException {
 
             long index = Long.parseLong(key.toString());
-            String[] val;
+            String[] val = new String[1];
+            String[] element;
+            String[] tempVal;
             Text outputValue = new Text();
-            HashMap<Long, Double> psi = new HashMap<Long, Double>();
+            HashMap<Long, String> psi = new HashMap<Long, String>();
             ArrayList<String> listValues = new ArrayList<String>();
             double c1 = 2.0 / n;
             double tempValue = 0;
             long j;
             long m = n / 2;
 
-            while (values.hasNext()) {
-                listValues.add(values.next().toString());
-            }
+            if (index != -1) {
 
-            for (long i = 0; i < n; i++) {
+                while (values.hasNext()) {
+                    listValues.add(values.next().toString());
+                }
 
-                if (i % COUNT_PSI == index) {
+                for (long i = 0; i < n; i++) {
 
-                    for (int idx = 0; idx < listValues.size(); idx++) {
+                    if (i % COUNT_PSI == index) {
 
-                        val = listValues.get(idx).split(",");
-                        j = Long.parseLong(val[0]);
+                        for (int idx = 0; idx < listValues.size(); idx++) {
 
-                        if (j == m) {
+                            val = listValues.get(idx).split(",");
+                            j = Long.parseLong(val[1]);
 
-                            if (i == j) {
+                            if (j == m) {
 
-                                tempValue = 1.0 - c1;
+                                if (i == j) {
+
+                                    tempValue = 1.0 - c1;
+                                } else {
+
+                                    tempValue = -c1;
+                                }
                             } else {
 
-                                tempValue = -c1;
+                                if (i == j) {
+
+                                    tempValue = c1 - 1.0;
+                                } else {
+
+                                    tempValue = c1;
+                                }
                             }
-                        } else {
 
-                            if (i == j) {
+                            element = val[3].split("j");
 
-                                tempValue = c1 - 1.0;
+                            if (psi.containsKey(i)) {
+                                tempVal = psi.get(i).split("j");
+                                psi.put(i, Double.toString(Double.parseDouble(
+                                        tempVal[0]) + tempValue
+                                        * Double.parseDouble(element[0]))
+                                        + "j" + element[1]);
                             } else {
-
-                                tempValue = c1;
+                                psi.put(i, Double.toString(tempValue
+                                        * Double.parseDouble(element[0])) + "j"
+                                        + element[1]);
                             }
                         }
 
-                        if (psi.containsKey(i)) {
-                            psi.put(i, psi.get(i) + tempValue
-                                    * Double.parseDouble(val[1]));
-                        } else {
-                            psi.put(i, tempValue * Double.parseDouble(val[1]));
-                        }
                     }
 
                 }
 
-            }
+                for (long i : psi.keySet()) {
 
-            for (long i : psi.keySet()) {
+                    outputValue.set(val[0] + "," + Long.toString(i) + ",0,"
+                            + psi.get(i));
+                    output.collect(null, outputValue);
+                }
 
-                outputValue.set(Long.toString(i) + ","
-                        + Double.toString(psi.get(i)));
-                output.collect(null, outputValue);
+            } else {
+                while (values.hasNext()) {
+                    outputValue.set(values.next().toString());
+                    output.collect(null, outputValue);
+                }
             }
         }
     }

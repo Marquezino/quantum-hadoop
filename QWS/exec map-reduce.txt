@@ -1,9 +1,14 @@
 ####################################################################################################
 # Operações ########################################################################################
 
-hadoop jar mult.jar mult.MultMatrix /user/david/mult /user/david/tmp /user/david/mult-out B
-hadoop jar mult.jar mult.KronMatrix /user/david/multKron /user/david/multKron-out B
-hadoop jar mult.jar mult.NormMatrix /user/david/norm /user/david/norm-out
+hadoop jar operations.jar operations.MultMatrix /user/david/mult /user/david/tmp /user/david/mult-out B
+hadoop jar operations.jar operations.KronMatrix /user/david/multKron /user/david/multKron-out B
+hadoop jar operations.jar operations.NormMatrix /user/david/norm /user/david/norm-out
+hadoop jar operations.jar operations.AbsSquare /user/david/pdf /user/david/pdf-out
+hadoop jar operations.jar operations.Reshape 2,2,10,10,2,2,10,10 /user/david/reshape /user/david/reshape-out
+hadoop jar operations.jar operations.SumAxis 1,2,5,6 ?,?,?,?,?,?,5,5 /user/david/sumaxis /user/david/sumaxis-out
+hadoop jar operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
+java -cp $CLASSPATH:operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
 
 hadoop jar qws.jar qws.QWS
 
@@ -21,6 +26,15 @@ hadoop dfs -rmr /user/david/multKron-out
 hadoop dfs -copyToLocal /user/david/norm-out norm-out
 hadoop dfs -rmr /user/david/norm-out
 
+hadoop dfs -copyToLocal /user/david/pdf-out pdf-out
+adoop dfs -rmr /user/david/pdf-out
+
+hadoop dfs -copyToLocal /user/david/reshape-out reshape-out
+hadoop dfs -rmr /user/david/reshape-out
+
+hadoop dfs -copyToLocal /user/david/sumaxis-out sumaxis-out
+hadoop dfs -rmr /user/david/sumaxis-out
+
 hadoop dfs -copyToLocal /user/david/qws_tmp qws_tmp
 hadoop dfs -rmr /user/david/qws_tmp/*
 
@@ -30,19 +44,10 @@ hadoop dfs -rmr /user/david/qws_tmp/*
 ####################################################################################################
 # Criando um arquivo .jar ##########################################################################
 
-mkdir src/mult_class
+mkdir bin
 
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/mult_class/ \
-src/MultMatrix.java src/KronMatrix.java src/NormMatrix.java
+javac -d bin/ src/QWS.java
 
-jar -cvf mult.jar -C src/mult_class/ .
-
-
-mkdir src/qws_class
-
-javac -cp /home/hduser/hadoop/*:/home/hduser/hadoop/lib/* -d src/qws_class/ \
-src/QWS.java
-
-jar -cvf qws.jar -C src/qws_class/ .
+jar -cvf qws.jar -C bin/ .
 
 ####################################################################################################
