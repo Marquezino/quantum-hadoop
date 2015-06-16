@@ -57,17 +57,19 @@ parameters:
 Compile and run
 ---------------
 
-Open the Terminal and go to the folder where
-MultMatrix.java, KronMatrix.java,
-NormMatrix.java, absSquare.java, Reshape.java
-and PDFChart.java are stored. Now, execute the
-follow commands:
+To compile the code you need to set the
+environment variable HADOOP_CLASSPATH.
 
-mkdir operations_class
-javac -d operations_class/ MultMatrix.java \
-KronMatrix.java NormMatrix.java Reshape.java \
-absSquare.java PDFChart.java
-jar -cvf operations.jar -C operations_class/ .
+Open the Terminal and go to the location where
+the folder src is stored. Now, execute the follow
+commands:
+
+mkdir bin
+javac -d bin/ src/MultMatrix.java \
+src/KronMatrix.java src/NormMatrix.java \
+src/AbsSquare.java src/Reshape.java \
+src/SumAxis.java src/PDFChart.java
+jar -cvf operations.jar -C bin/ .
 
 
 To run execute the follow command:

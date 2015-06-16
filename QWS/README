@@ -48,6 +48,9 @@ JAR_DIR and OUTPUT_DIR.
 Compile and run
 ---------------
 
+To compile the code you need to set the
+environment variable HADOOP_CLASSPATH.
+
 Open the Terminal and go to the location where
 the folder src is stored. Now, execute the follow
 commands:
