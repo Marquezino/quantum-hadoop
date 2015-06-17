@@ -45,7 +45,7 @@ public class QW {
     /**
      * The dimensions of the two dimensional lattice.
      */
-    private static final int SIZE = 5;
+    private static final int SIZE = 10;
 
     /**
      * The number of steps that will be executed in the simulation.
@@ -512,9 +512,11 @@ public class QW {
                                         for (int k8 = 0; k8 < SIZE; k8++) {
 
                                             if ((k1 == 0) && (k2 == 0)
-                                                    && (k3 == 2) && (k4 == 2)
+                                                    && (k3 == (int)SIZE/2)
+                                                    && (k4 == (int)SIZE/2)
                                                     && (k5 == 1) && (k6 == 1)
-                                                    && (k7 == 2) && (k8 == 2)) {
+                                                    && (k7 == (int)SIZE/2)
+                                                    && (k8 == (int)SIZE/2)) {
 
                                                 bw.write("\nB," + Long.toString(
                                                         walkersStateCount)
@@ -525,9 +527,11 @@ public class QW {
                                             }
 
                                             if ((k1 == 1) && (k2 == 1)
-                                                    && (k3 == 2) && (k4 == 2)
+                                                    && (k3 == (int)SIZE/2)
+                                                    && (k4 == (int)SIZE/2)
                                                     && (k5 == 0) && (k6 == 0)
-                                                    && (k7 == 2) && (k8 == 2)) {
+                                                    && (k7 == (int)SIZE/2)
+                                                    && (k8 == (int)SIZE/2)) {
 
                                                 bw.write("\nB," + Long.toString(
                                                         walkersStateCount)
