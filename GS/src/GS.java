@@ -205,25 +205,20 @@ public class GS {
             fl = new File(OUTPUT_DIR + psiT + "_" + Integer.toString(N));
             fu.copy(fs, pt, fl, false, conf);
 
+            // Delete _logs folder and _SUCCESS file in the pdf folder
+            pt = new Path(PATH + pdf + "/_logs");
+            fs.delete(pt, true);
+            pt = new Path(PATH + pdf + "/_SUCCESS");
+            fs.delete(pt, false);
+
             pt = new Path(PATH + pdf);
             fl = new File(OUTPUT_DIR + pdf);
             fu.copy(fs, pt, fl, false, conf);
 
 
-            // Create a chart of the probability distribution function of psiT
-            pr = rt.exec("hadoop jar " + JAR_DIR
-                    + "operations.jar operations.PDFChart 1 " + OUTPUT_DIR + pdf
-                    + "/part-r-00000" + " " + OUTPUT_DIR);
-
-            pr.waitFor();
-            pr.destroy();
-
-            System.out.println("PNG chart created.");
-
-
             // Delete the PATH directory.
-            //pt = new Path(PATH);
-            //fs.delete(pt, true);
+            pt = new Path(PATH);
+            fs.delete(pt, true);
 
             fs.close();
 

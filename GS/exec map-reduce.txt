@@ -7,8 +7,6 @@ hadoop jar operations.jar operations.NormMatrix /user/david/norm /user/david/nor
 hadoop jar operations.jar operations.AbsSquare /user/david/pdf /user/david/pdf-out
 hadoop jar operations.jar operations.Reshape 2,2,10,10,2,2,10,10 /user/david/reshape /user/david/reshape-out
 hadoop jar operations.jar operations.SumAxis 1,2,5,6 ?,?,?,?,?,?,5,5 /user/david/sumaxis /user/david/sumaxis-out
-hadoop jar operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
-java -cp $CLASSPATH:operations.jar operations.PDFChart 1 pdf-out/part-r-00000 pdf-out/../
 
 hadoop jar grover.jar grover.Grover psi psi-out 4
 

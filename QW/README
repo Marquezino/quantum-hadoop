@@ -52,7 +52,10 @@ Compile and run
 ---------------
 
 To compile the code you need to set the
-environment variable HADOOP_CLASSPATH.
+environment variable CLASSPATH for your user with:
+
+HADOOP_FOLDER_PATH/*:HADOOP_FOLDER_PATH/lib/*
+
 
 Open the Terminal and go to the location where
 the folder src is stored. Now, execute the follow

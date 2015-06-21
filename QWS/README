@@ -1,4 +1,4 @@
-Quantum Walk Simulator Version 1.0 2015-05-23
+Quantum Walk Simulator Version 1.1 2015-06-19
 
 
 What is it?
@@ -19,37 +19,68 @@ implementation with JDK 1.7 and Apache Hadoop
 1.2.1.
 
 
+Input format
+------------
+
+The input files must have a header and other
+lines with the data. The format is:
+
+-Header:
+#TYPE,M,N
+    where:
+        -TYPE: A or B. A is the left matrix. B is
+               the right matrix.
+        -M and N: The dimensions of the matrices.
+                  A vector must have a column
+                  matrix format: #TYPE,M,1
+
+-Other lines:
+TYPE,M,N,REALjIMAGINARY
+    where:
+        -TYPE: A or B. A is the left matrix. B is
+               the right matString absSquare;
+        String reshape;
+        String pdf;rix.
+        -M and N: The row and column value. A
+                  vector must have a column
+                  matrix format: TYPE,M,0
+        -REAL and IMAGINARY: The real and the
+                             imaginary value for
+                             each element of the
+                             matrix. The
+                             character "j" is the
+                             separator used in
+                             the code.
+
+
 Parameters
 ----------
 
-In the QWS.java file the user can change the
-value of the variable STEPS, FILES, WORK_DIR,
-JAR_DIR and OUTPUT_DIR.
-
--STEPS: The number of steps that will be executed
-	in the simulation.
-
--FILES: The path of the file that contains the
-	paths to the files of all matrices U and
-	the vector psi. The order matter. Should
-	be: U_0,U_1,...,U_n,psi. One per line.
-
--WORK_DIR: The path in the HDFS where the program
-	will store the data. 
-
--JAR_DIR: The folder path where the .jar files
-	are stored.
-
--OUTPUT_DIR: The folder path where the result
-	will be stored. Should be a empty folder
-	because this ALL DATA will be deleted.
+In the config.properties file are configuration
+parameters that the user must change to qws.jar
+program work properly.
 
 
-Compile and run
----------------
+Run
+---
 
-To compile the code you need to set the
-environment variable HADOOP_CLASSPATH.
+Open the Terminal and go to the location where
+the .jar files are stored. Now, execute the
+follow command:
+
+hadoop jar qws.jar qws.QWS
+
+
+Compile
+-------
+
+If you need compile the source code you will need
+the source files in the folder src. To compile the
+code you need to set the environment variable
+CLASSPATH for your user with:
+
+HADOOP_FOLDER_PATH/*:HADOOP_FOLDER_PATH/lib/*
+
 
 Open the Terminal and go to the location where
 the folder src is stored. Now, execute the follow
@@ -59,8 +90,5 @@ mkdir bin
 javac -d bin/ src/QWS.java
 jar -cvf qws.jar -C bin/ .
 
-To run execute the follow command:
-
-hadoop jar qws.jar qws.QWS
 
 

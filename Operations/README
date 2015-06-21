@@ -19,6 +19,38 @@ implementation with JDK 1.7 and Apache Hadoop
 1.2.1.
 
 
+Input format
+------------
+
+The input files must have a header and other
+lines with the data. The format is:
+
+-Header:
+#TYPE,M,N
+    where:
+        -TYPE: A or B. A is the left matrix. B is
+               the right matrix.
+        -M and N: The dimensions of the matrices.
+                  A vector must have a column
+                  matrix format: #TYPE,M,1
+
+-Other lines:
+TYPE,M,N,REALjIMAGINARY
+    where:
+        -TYPE: A or B. A is the left matrix. B is
+               the right matrix.
+        -M and N: The row and column value. A
+                  vector must have a column
+                  matrix format: TYPE,M,0
+        -REAL and IMAGINARY: The real and the
+                             imaginary value for
+                             each element of the
+                             matrix. The
+                             character "j" is the
+                             separator used in
+                             the code.
+
+
 Parameters
 ----------
 
@@ -42,23 +74,68 @@ parameters:
 -NEW_SHAPE: The new shape separated by the
     character comma.
 
--AXIS: The axis to generate a 2D Chart.
-
 -LOCAL_INPUT_FILE: A local path where the
     input file is.
 
 -LOCAL_OUTPUT_FOLDER: A local directory where the
     output will be stored.
 
--$CLASSPATH: This is a environment variable that should have the path to
-    JFreeChart and JCommon .jar files.
+-AXES: The axes over which the sum will be
+    performed. Separate the values using the
+    character comma: x1,x2,...,xn
+
+-POSITION: A specific position given by chosen
+    indexes in the input array. This must be in
+    the same dimension of the array in the input
+    file. Use the character "?" to represent a
+    not static value and the character comma to
+    separate them: ?,?,?,?,x,y
+
+Run
+---
+
+Open the Terminal and go to the location where
+the operations.jar file is stored. Now, execute
+the follow command:
+
+Matrix Multiplication
+hadoop jar operations.jar operations.MultMatrix \
+HDFS_INPUT_FOLDER HDFS_TEMPORARY_FOLDER \
+HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+
+Kronecker Product
+hadoop jar operations.jar operations.KronMatrix \
+HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER \
+TYPE_OF_MATRIX
+
+Norm
+hadoop jar operations.jar operations.NormMatrix \
+HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER
+
+Square of the absolute value
+hadoop jar operations.jar operations.absSquare \
+HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER
+
+Reshape
+hadoop jar operations.jar operations.Reshape \
+NEW_SHAPE HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER
+
+Sum over the axis
+hadoop jar operations.jar operations.SumAxis \
+AXES POSITION HDFS_INPUT_FOLDER \
+HDFS_OUTPUT_FOLDER
 
 
-Compile and run
----------------
+Compile
+-------
 
-To compile the code you need to set the
-environment variable HADOOP_CLASSPATH.
+If you need compile the source code you will need
+the source files in the folder src. To compile the
+code you need to set the environment variable
+CLASSPATH for your user with:
+
+HADOOP_FOLDER_PATH/*:HADOOP_FOLDER_PATH/lib/*
+
 
 Open the Terminal and go to the location where
 the folder src is stored. Now, execute the follow
@@ -68,37 +145,5 @@ mkdir bin
 javac -d bin/ src/MultMatrix.java \
 src/KronMatrix.java src/NormMatrix.java \
 src/AbsSquare.java src/Reshape.java \
-src/SumAxis.java src/PDFChart.java
+src/SumAxis.java
 jar -cvf operations.jar -C bin/ .
-
-
-To run execute the follow command:
-
-Matrix Multiplication
-hadoop jar operations.jar operations.MultMatrix HDFS_INPUT_FOLDER \
-HDFS_TEMPORARY_FOLDER HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
-
-Kronecker Product
-hadoop jar operations.jar operations.KronMatrix HDFS_INPUT_FOLDER \
-HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
-
-Norm
-hadoop jar operations.jar operations.NormMatrix HDFS_INPUT_FOLDER \
-HDFS_OUTPUT_FOLDER
-
-absSquare
-hadoop jar operations.jar operations.absSquare HDFS_INPUT_FOLDER \
-HDFS_OUTPUT_FOLDER
-
-Reshape
-hadoop jar operations.jar operations.Reshape NEW_SHAPE HDFS_INPUT_FOLDER \
-HDFS_OUTPUT_FOLDER
-
-PDFChart
-hadoop jar operations.jar operations.PDFChart AXIS LOCAL_INPUT_FILE \
-LOCAL_OUTPUT_FOLDER
-or
-java -cp $CLASSPATH:operations.jar operations.PDFChart AXIS LOCAL_INPUT_FILE \
-LOCAL_OUTPUT_FOLDER
-
-

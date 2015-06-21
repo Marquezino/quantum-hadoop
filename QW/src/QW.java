@@ -859,6 +859,19 @@ public class QW {
             // Delete the OUTPUT_DIR if it exists.
             fu.fullyDelete(new File(OUTPUT_DIR));
 
+            /*
+             * Delete _logs folder and _SUCCESS file in the walkersStateNorm and
+             * pdf folders.
+             */
+            pt = new Path(WORK_DIR + walkersStateNorm + "/_logs");
+            fs.delete(pt, true);
+            pt = new Path(WORK_DIR + walkersStateNorm + "/_SUCCESS");
+            fs.delete(pt, false);
+            pt = new Path(WORK_DIR + pdf + "/_logs");
+            fs.delete(pt, true);
+            pt = new Path(WORK_DIR + pdf + "/_SUCCESS");
+            fs.delete(pt, false);
+
             // Copy the result from HDFS to local.
             pt = new Path(WORK_DIR + walkersStateT);
             fu.copy(fs, pt, new File(OUTPUT_DIR + "walkersStateT"), false,
@@ -869,23 +882,6 @@ public class QW {
             pt = new Path(WORK_DIR + pdf);
             fu.copy(fs, pt, new File(OUTPUT_DIR + "pdf"), false, conf);
 
-            // PDF Chart for the axis 1
-            pr = rt.exec("java -cp " + System.getenv("CLASSPATH") + ":"
-                    + JAR_DIR + "operations.jar operations.PDFChart 1 "
-                    + OUTPUT_DIR + "pdf/part-r-00000 " + OUTPUT_DIR);
-
-            pr.waitFor();
-            pr.destroy();
-
-            // PDF Chart for the axis 2
-            pr = rt.exec("java -cp " + System.getenv("CLASSPATH") + ":"
-                    + JAR_DIR + "operations.jar operations.PDFChart 2 "
-                    + OUTPUT_DIR + "pdf/part-r-00000 " + OUTPUT_DIR);
-
-            pr.waitFor();
-            pr.destroy();
-
-            System.out.println("PDF charts created.");
 
             // Delete the WORK_DIR directory.
             pt = new Path(WORK_DIR);

@@ -1,5 +1,5 @@
 /*
- * NormMatrix.java    1.0 2015/03/10
+ * NormMatrix.java    1.1 2015/06/19
  *
  * Copyright (C) 2015 GNU General Public License
  *
@@ -40,7 +40,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
     This software calculate the matrix norm using Apache Hadoop.
  *
  * @version
-    1.0 10 Mar 2015  * @author
+    1.1 19 Jun 2015  * @author
     David Souza  */
 
 
@@ -54,8 +54,7 @@ public class NormMatrix {
             String line = value.toString();
             // "," is the delimiter used in the input file.
             String[] records = line.split(",");
-            DoubleWritable outputReal = new DoubleWritable();
-            DoubleWritable outputImaginary = new DoubleWritable();
+            DoubleWritable output = new DoubleWritable();
             double[] element = new double[2];
             String[] vals;
 
@@ -65,11 +64,9 @@ public class NormMatrix {
                 vals = records[3].split("j");
                 element[0] = Double.parseDouble(vals[0]);
                 element[1] = Double.parseDouble(vals[1]);
-                outputReal.set(element[0] * element[0]);
-                outputImaginary.set(element[1] * element[1]);
+                output.set(element[0] * element[0] + element[1] * element[1]);
 
-                context.write(new LongWritable(0), outputReal);
-                context.write(new LongWritable(1), outputImaginary);
+                context.write(new LongWritable(0), output);
 
             }
         }
@@ -105,31 +102,11 @@ public class NormMatrix {
 
             double sum = 0.0d;
 
-            // 0 is the real part of the number
-            if (key.toString().equals("0")) {
-
-                for (DoubleWritable val : values) {
-                    sum += val.get();
-                }
-
-                context.write(null, new Text("Real="
-                        + Double.toString(Math.sqrt(sum))));
-
-            } else {
-
-                // 1 is the imaginary part of the number
-                if (key.toString().equals("1")) {
-
-                    for (DoubleWritable val : values) {
-                        sum += val.get();
-                    }
-
-                    context.write(null, new Text("Imaginary="
-                            + Double.toString(Math.sqrt(sum))));
-
-                }
-
+            for (DoubleWritable val : values) {
+                sum += val.get();
             }
+
+            context.write(null, new Text(Double.toString(Math.sqrt(sum))));
 
         }
     }
