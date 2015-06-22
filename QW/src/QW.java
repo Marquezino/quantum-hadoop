@@ -45,7 +45,7 @@ public class QW {
     /**
      * The dimensions of the two dimensional lattice.
      */
-    private static final int SIZE = 10;
+    private static final int SIZE = 5;
 
     /**
      * The number of steps that will be executed in the simulation.
@@ -756,7 +756,7 @@ public class QW {
                             getPath())));
 
                     line = br.readLine();
-                    if (line.indexOf("#") > -1) {
+                    if (line != null && line.indexOf("#") > -1) {
                         fs.rename(stat.getPath(), new Path(stat.getPath().
                                 toString().replaceAll("part-", "-")));
                         break;

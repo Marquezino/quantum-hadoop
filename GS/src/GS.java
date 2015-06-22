@@ -171,7 +171,7 @@ public class GS {
                             getPath())));
 
                     line = br.readLine();
-                    if (line.indexOf("#") > -1) {
+                    if (line != null && line.indexOf("#") > -1) {
                         fs.rename(stat.getPath(), new Path(stat.getPath().
                                 toString().replaceAll("part-", "-")));
                         break;
