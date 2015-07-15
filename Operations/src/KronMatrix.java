@@ -524,7 +524,7 @@ public class KronMatrix {
     }
 
 
-    public static long splitA(Configuration conf, FileSystem fsInput,
+    public static long replicateA(Configuration conf, FileSystem fsInput,
             Path inputPath, Path newInputPath, long countB) {
 
         long numberOfParts = 1;
@@ -692,7 +692,7 @@ public class KronMatrix {
 
             countB = prepareB(conf, fsInput, inputPath, newInputPath, countA);
 
-            numberOfParts = splitA(conf, fsInput, inputPath, newInputPath,
+            numberOfParts = replicateA(conf, fsInput, inputPath, newInputPath,
                                 countB);
 
 

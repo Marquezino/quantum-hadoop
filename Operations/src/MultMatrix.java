@@ -51,7 +51,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class MultMatrix {
 
-    public static class MapMultiplication extends
+    public static class MapPrepare extends
             Mapper<LongWritable, Text, Text, Text> {
         public void map(LongWritable key, Text value, Context context)
                 throws IOException, InterruptedException {
@@ -90,45 +90,8 @@ public class MultMatrix {
         }
     }
 
-    public static class MapDot extends Mapper<LongWritable, Text, Text, Text> {
-        public void map(LongWritable key, Text value, Context context)
-                throws IOException, InterruptedException {
 
-            String line = value.toString();
-            // "," is the delimiter used in the input file.
-            String[] records = line.split(",");
-            Text outputKey = new Text();
-            Text outputValue = new Text();
-
-            if (records[0].equals("A")) {    // A is the left matrix.
-
-                outputKey.set(records[2]);
-                outputValue.set("A," + records[1] + "," + records[2]
-                        + "," + records[3]);
-                context.write(outputKey, outputValue);
-
-            } else {
-                if (records[0].equals("B")) {    // B is the right matrix.
-
-                    outputKey.set(records[2]);
-                    outputValue.set("B," + records[1] + "," + records[2]
-                            + "," + records[3]);
-                    context.write(outputKey, outputValue);
-                } else {
-                    // # is the line with the matrices dimensions.
-                    if (records[0].indexOf("#") > -1) {
-
-                        outputKey.set("#");
-                        outputValue.set(records[0] + "," + records[1]
-                                + "," + records[2]);
-                        context.write(outputKey, outputValue);
-                    }
-                }
-            }
-        }
-    }
-
-    public static class ReduceMultiplication extends
+    public static class ReducePrepare extends
             Reducer<Text, Text, Text, Text> {
         public void reduce(Text key, Iterable<Text> values, Context context)
                 throws IOException, InterruptedException {
@@ -176,65 +139,6 @@ public class MultMatrix {
                     valB = elementB[2].split("j");
 
                     output.set(elementA[0] + "," + elementB[1] + ";"
-                            + Double.toString(Double.parseDouble(valA[0])
-                            * Double.parseDouble(valB[0])) + "j"
-                            + Double.toString(Double.parseDouble(valA[1])
-                            * Double.parseDouble(valB[1])));
-
-                    context.write(null, output);
-                }
-            }
-
-        }
-    }
-
-
-    public static class ReduceDot extends Reducer<Text, Text, Text, Text> {
-        public void reduce(Text key, Iterable<Text> values, Context context)
-                throws IOException, InterruptedException {
-
-            String[] value;
-            String[] valA;
-            String[] valB;
-            String rows = "";
-            String columns = "";
-            List<String[]> listA = new ArrayList<String[]>();
-            List<String[]> listB = new ArrayList<String[]>();
-            Text output = new Text();
-
-            for (Text val : values) {
-                value = val.toString().split(",");
-                if (value[0].equals("A")) {
-                    listA.add(new String[]{value[1], value[2], value[3]});
-
-                } else {
-                    if (value[0].equals("B")) {
-                        listB.add(new String[]{value[1], value[2], value[3]});
-
-                    } else { // Write the matrix dimension in the file.
-
-                        if (value[0].equals("#A")) {
-                            columns = value[1];
-                        }
-
-                        if (value[0].equals("#B")) {
-                            rows = value[1];
-                        }
-                    }
-                }
-            }
-
-            if (!rows.equals("") && !columns.equals("")) {
-                context.write(null, new Text(key.toString() + ";"
-                        + rows + "," + columns));
-            }
-
-            for (String[] elementA : listA) {
-                for (String[] elementB : listB) {
-                    valA = elementA[2].split("j");
-                    valB = elementB[2].split("j");
-
-                    output.set(elementB[0] + "," + elementA[0] + ";"
                             + Double.toString(Double.parseDouble(valA[0])
                             * Double.parseDouble(valB[0])) + "j"
                             + Double.toString(Double.parseDouble(valA[1])
@@ -338,10 +242,10 @@ public class MultMatrix {
 
     public static void main(String[] args) throws Exception {
 
-        boolean dotProduct = false;
         String[] dimA = new String[2];
         String[] dimB = new String[2];
         BufferedReader br;
+        String tempPath = args[0] + "TempSecondPass";
         String line;
         String[] vals;
 
@@ -361,10 +265,15 @@ public class MultMatrix {
         try {
 
             // Set if the output will be matrix type A ou type B
-            conf.set("typeMatrixOutput", args[3]);
+            conf.set("typeMatrixOutput", args[2]);
 
+            // The input/output paths of the first Map/Reduce job
             inputPath = new Path(args[0]);
-            outputPath = new Path(args[1]);
+            outputPath = new Path(tempPath);
+
+            // The input/output paths of the second Map/Reduce job
+            inputPath2 = new Path(tempPath);
+            outputPath2 = new Path(args[1]);
 
             fsInput = FileSystem.get(conf);
             // The names of all files in the input path
@@ -381,18 +290,26 @@ public class MultMatrix {
                     continue;
                 }
 
-                if (line.indexOf("#A") > -1) {
-                    vals = line.split(",");
-                    dimA[0] = vals[1];
-                    dimA[1] = vals[2];
+                if (dimA[0] != null && dimA[1] != null && dimB[0] != null
+                        && dimB[1] != null) {
+                    br.close();
+                    break;
+                }
 
-                } else {
-                    if (line.indexOf("#B") > -1) {
+                if (line.indexOf("#") > -1) {
+                    if (line.indexOf("#A") > -1) {
                         vals = line.split(",");
-                        dimB[0] = vals[1];
-                        dimB[1] = vals[2];
-                    }
+                        dimA[0] = vals[1];
+                        dimA[1] = vals[2];
 
+                    } else {
+                        if (line.indexOf("#B") > -1) {
+                            vals = line.split(",");
+                            dimB[0] = vals[1];
+                            dimB[1] = vals[2];
+                        }
+
+                    }
                 }
                 br.close();
             }
@@ -405,48 +322,18 @@ public class MultMatrix {
              */
             if (!dimA[1].equals(dimB[0])) {
 
-                if (dimB[0].equals("1") && dimA[1].equals(dimB[1])) {
-                    dotProduct = true;
-                    System.out.print("\n---------------------------------------"
-                            + "-------------------------\n");
-                    System.out.println("You can not perform the multiplication "
-                            + "between the matrices in the input path. The "
-                            + "constraint below should be satisfied:\nThe "
-                            + "number of columns in the matrix A should be "
-                            + "equal to the number of rows in the matrix B.\n"
-                            + "Performing dot product in instead.");
-                    System.out.println("---------------------------------------"
-                            + "-------------------------\n");
-                } else {
-                    System.out.print("\n---------------------------------------"
-                            + "-------------------------\n");
-                    System.out.println("You can not perform the multiplication "
-                            + "or the dot product between the matrices in the "
-                            + "input path. One of these three constraints did "
-                            + "not be satisfied:\n1- The number of columns in "
-                            + "the matrix A should be equal to the number of "
-                            + "rows in the matrix B.\n2- If the number of rows "
-                            + "in the matrix B is equal to 1 then the number "
-                            + "of columns in matrix A should be equal the "
-                            + "number of columns in matrix B.\n3- If the "
-                            + "number of columns in the matrix A is not equal "
-                            + "to the number of rows in the matrix B then the "
-                            + "number of rows in the matrix B should be equal "
-                            + "to 1.");
-                    System.out.println("---------------------------------------"
-                            + "-------------------------\n");
-                    System.exit(1);
-                }
+                System.out.print("\n---------------------------------------"
+                        + "-------------------------\n");
+                System.out.println("You can not perform the multiplication "
+                        + "between the matrices in the input path. The "
+                        + "constraint below should be satisfied:\nThe "
+                        + "number of columns in the matrix A must be "
+                        + "equal to the number of rows in the matrix B.");
+                System.out.println("---------------------------------------"
+                        + "-------------------------\n");
+                System.exit(1);
 
-            } else {
-                System.out.print("\n-------------------------------------------"
-                        + "---------------------\n");
-                System.out.println("The dot product between two matrices is "
-                        + "equals to the multiplication between them.");
-                System.out.println("-------------------------------------------"
-                        + "---------------------\n");
             }
-
 
 
             fs = FileSystem.get(new URI(outputPath.toString()), conf);
@@ -463,15 +350,9 @@ public class MultMatrix {
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
 
-            if (dotProduct) {
-                // Setup MapReduce job
-                job.setMapperClass(MapDot.class);
-                job.setReducerClass(ReduceDot.class);
-            } else {
-                // Setup MapReduce job
-                job.setMapperClass(MapMultiplication.class);
-                job.setReducerClass(ReduceMultiplication.class);
-            }
+            // Setup MapReduce job
+            job.setMapperClass(MapPrepare.class);
+            job.setReducerClass(ReducePrepare.class);
 
             // Set only the number of reduces tasks
             //job.setNumReduceTasks(Integer.parseInt(args[4]));
@@ -488,9 +369,7 @@ public class MultMatrix {
             // Execute job
             job.waitForCompletion(true);
 
-            // The second Map/Reduce job
-            inputPath2 = new Path(args[1]);
-            outputPath2 = new Path(args[2]);
+            // Start of the second Map/Reduce job
             fs2 = FileSystem.get(new URI(outputPath2.toString()), conf);
 
             // Delete the output directory if it already exists.

@@ -1,7 +1,7 @@
 ####################################################################################################
 # Operações ########################################################################################
 
-hadoop jar operations.jar operations.MultMatrix /user/david/mult /user/david/tmp /user/david/mult-out B
+hadoop jar operations.jar operations.MultMatrix /user/david/mult /user/david/mult-out B
 hadoop jar operations.jar operations.KronMatrix /user/david/multKron /user/david/multKron-out B
 hadoop jar operations.jar operations.NormMatrix /user/david/norm /user/david/norm-out
 hadoop jar operations.jar operations.AbsSquare /user/david/pdf /user/david/pdf-out

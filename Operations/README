@@ -60,10 +60,6 @@ parameters:
 -HDFS_INPUT_FOLDER: The directory in the HDFS
 	where the input files are.
 
--HDFS_TEMPORARY_FOLDER: A path to a absent
-	ditectory in the HDFS. It will be deleted
-	in the end of execution.
-
 -HDFS_OUTPUT_FOLDER: A path to a absent
 	ditectory in the HDFS. The program will store
 	the result here. 
@@ -100,8 +96,8 @@ the follow command:
 
 Matrix Multiplication
 hadoop jar operations.jar operations.MultMatrix \
-HDFS_INPUT_FOLDER HDFS_TEMPORARY_FOLDER \
-HDFS_OUTPUT_FOLDER TYPE_OF_MATRIX
+HDFS_INPUT_FOLDER HDFS_OUTPUT_FOLDER \
+TYPE_OF_MATRIX
 
 Kronecker Product
 hadoop jar operations.jar operations.KronMatrix \

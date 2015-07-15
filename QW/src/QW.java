@@ -323,7 +323,7 @@ public class QW {
 
             pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
                     + "MultMatrix " + WORK_DIR + operatorW1A + "_input" + " "
-                    + WORK_DIR + "tmp" + " " + WORK_DIR + operatorW1A + " A");
+                    + WORK_DIR + operatorW1A + " A");
 
             pr.waitFor();
             pr.destroy();
@@ -339,7 +339,7 @@ public class QW {
 
             pr = rt.exec("hadoop jar " + JAR_DIR + "operations.jar operations."
                     + "MultMatrix " + WORK_DIR + operatorW1A + "_input" + " "
-                    + WORK_DIR + "tmp" + " " + WORK_DIR + operatorW1B + " B");
+                    + WORK_DIR + operatorW1B + " B");
 
             pr.waitFor();
             pr.destroy();
@@ -665,8 +665,8 @@ public class QW {
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
                         + "operations.jar operations.MultMatrix " + WORK_DIR
-                        + walkersStateT + "_input" + " " + WORK_DIR + "tmp"
-                        + " " + WORK_DIR + gWalkers + " B");
+                        + walkersStateT + "_input" + " " + WORK_DIR + gWalkers
+                        + " B");
 
 
                 pr.waitFor();
@@ -699,8 +699,7 @@ public class QW {
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
                         + "operations.jar operations.MultMatrix " + WORK_DIR
-                        + operatorW2B + " " + WORK_DIR + "tmp" + " " + WORK_DIR
-                        + w2BGWalkers + " B");
+                        + operatorW2B + " " + WORK_DIR + w2BGWalkers + " B");
 
 
                 pr.waitFor();
@@ -730,8 +729,7 @@ public class QW {
 
                 pr = rt.exec("hadoop jar " + JAR_DIR
                         + "operations.jar operations.MultMatrix " + WORK_DIR
-                        + operatorW2A + " " + WORK_DIR + "tmp" + " " + WORK_DIR
-                        + walkersStateT + " B");
+                        + operatorW2A + " " + WORK_DIR + walkersStateT + " B");
 
 
                 pr.waitFor();
