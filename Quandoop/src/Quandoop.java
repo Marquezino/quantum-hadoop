@@ -35,7 +35,7 @@ import org.apache.hadoop.conf.Configuration;
  * This software simulate a quantum walk or other problem that can be solved
  * with a sequence of matrices multiplication using Apache Hadoop.
  *
- * @version 1.2 13 Jul 2015
+ * @version 1.3 8 Aug 2015
  * @author David Souza
  */
 
@@ -51,7 +51,7 @@ public class Quandoop {
         String jarDir;
         String dimensions;
         String measurement;
-        String position;
+        String saveStates;
         String outputDir;
         String line;
         String psi;
@@ -60,6 +60,7 @@ public class Quandoop {
         String absSquare;
         String reshape;
         String pdf = "";
+        String partialStates = "";
         boolean pdfCalc = false;
         int numAxes;
         String fullAxes;
@@ -95,8 +96,8 @@ public class Quandoop {
 		    jarDir = prop.getProperty("jarDir");
 		    dimensions = prop.getProperty("dimensions");
 		    measurement = prop.getProperty("measurement");
-		    position = prop.getProperty("position");
 		    outputDir = prop.getProperty("outputDir");
+		    saveStates = prop.getProperty("saveStates");
 
             if (steps == null || steps.equals("")) {
                 throw new IOException("The value of the configuration "
@@ -124,12 +125,11 @@ public class Quandoop {
             }
 
             if (dimensions == null || dimensions.equals("")
-		            || measurement == null || measurement.equals("")
-		            || position  == null || position.equals("")) {
+		            || measurement == null || measurement.equals("")) {
 
                 pdfCalc = false;
                 System.out.println("The value of the configuration "
-                        + "\"dimensions\", \"measurement\" or \"position\" is "
+                        + "\"dimensions\" or \"measurement\" is "
                         + "null or empty. The pdf calculation will not be run."
                         );
 
@@ -137,14 +137,28 @@ public class Quandoop {
                 pdfCalc = true;
             }
 
+            if (saveStates == null || saveStates.equals("")) {
+                saveStates = steps;
+            }
+
+            if (Integer.parseInt(saveStates) > Integer.parseInt(steps)) {
+                throw new IOException("The value of the configuration "
+                        + "\"saveStates\" can not be greater than the value of "
+                        + "the configuration \"steps\".");
+            }
+
+            if (Integer.parseInt(saveStates) < 1) {
+                throw new IOException("The value of the configuration "
+                        + "\"saveStates\" can not be less than 1.");
+            }
+
             configInput.close();
 
             if (pdfCalc) {
 
-                numAxes = dimensions.split(",").length - position.
-                            replaceAll("/?,", "").split(",").length;
+                numAxes = dimensions.split(",").length;
                 fullAxes = "1";
-                for (int i = 2; i < numAxes; i++) {
+                for (int i = 2; i <= numAxes; i++) {
                     fullAxes += "," + Integer.toString(i);
                 }
                 measurement = fullAxes.replaceAll(measurement + ",", "");
@@ -176,6 +190,8 @@ public class Quandoop {
 
             br.close();
 
+            System.out.println("The files are being prepared...");
+
             uDir = new String[numberU];
 
             br = new BufferedReader(new FileReader(paths));
@@ -203,7 +219,6 @@ public class Quandoop {
                     line = br.readLine();
                     i--;
                 }
-
 
             }
 
@@ -267,6 +282,34 @@ public class Quandoop {
                                 fs.rename(stat.getPath(), pt);
                             }
                         }
+                    }
+
+                    // Copy partial states
+                    if (j == numberU - 1 && i != 0 && i % Integer.
+                            parseInt(saveStates) == 0) {
+                        status = fs.listStatus(pt);
+                        for (FileStatus stat : status) {
+
+                            if (stat.getPath().toString().indexOf("part-")
+                                    > -1) {
+                                br = new BufferedReader(new InputStreamReader(
+                                        fs.open(stat.getPath())));
+
+                                line = br.readLine();
+                                if (line != null && line.indexOf("#") > -1) {
+                                    fs.rename(stat.getPath(), new Path(stat.
+                                            getPath().toString().replaceAll(
+                                            "part-", "-")));
+                                    break;
+                                }
+                            }
+
+                        }
+
+                        partialStates = workDir + "partialStates";
+                        fu.copyMerge(fs, pt, fs, new Path(partialStates + "/"
+                                + "step" + Integer.toString(i)  + "/part-0"),
+                                false, conf, null);
                     }
 
                     pt = new Path(psiT);
@@ -369,11 +412,11 @@ public class Quandoop {
                 fs.delete(pt, true);
 
                 /*
-                 * Computes the square of the absolute value for each element of the
-                 * array.
+                 * Computes the square of the absolute value for each element of
+                 *  the array.
                  */
-                pr = rt.exec("hadoop jar " + jarDir + "operations.jar operations."
-                        + "AbsSquare " + psiT + " " + absSquare);
+                pr = rt.exec("hadoop jar " + jarDir + "operations.jar "
+                        + "operations.AbsSquare " + psiT + " " + absSquare);
 
                 pr.waitFor();
 
@@ -401,9 +444,9 @@ public class Quandoop {
                 fs.delete(pt, true);
 
                 // Gives a new shape for the array.
-                pr = rt.exec("hadoop jar " + jarDir + "operations.jar operations."
-                        + "Reshape " + dimensions + " " + absSquare + " "
-                        + reshape);
+                pr = rt.exec("hadoop jar " + jarDir + "operations.jar "
+                        + "operations.Reshape " + dimensions + " " + absSquare
+                        + " " + reshape);
 
                 pr.waitFor();
 
@@ -424,8 +467,8 @@ public class Quandoop {
                 // End of the reshape
 
                 /*
-                 * Start of the sumAxis. In this case the output of SunAxis function
-                 * will be the PDF of psiT.
+                 * Start of the sumAxis. In this case the output of SunAxis
+                 * function will be the PDF of psiT.
                  */
                 pdf = workDir + "pdf";
 
@@ -434,11 +477,10 @@ public class Quandoop {
                 fs.delete(pt, true);
 
                 /*
-                 * Sum the elements of the array over given measurement, for a
-                 * specific position.
+                 * Sum the elements of the array over given measurement.
                  */ 
-                pr = rt.exec("hadoop jar " + jarDir + "operations.jar operations."
-                        + "SumAxis " + measurement + " " +  position + " " + reshape
+                pr = rt.exec("hadoop jar " + jarDir + "operations.jar "
+                        + "operations.SumAxis " + measurement + " " + reshape
                         + " " + pdf);
 
                 pr.waitFor();
@@ -492,6 +534,12 @@ public class Quandoop {
             if (pdfCalc) {
                 pt = new Path(pdf);
                 fu.copy(fs, pt, new File(outputDir + "pdf"), false, conf);
+            }
+
+            if (Integer.parseInt(saveStates) < Integer.parseInt(steps)) {
+                pt = new Path(partialStates);
+                fu.copy(fs, pt, new File(outputDir + "partialStates"), false,
+                        conf);
             }
 
             // Delete the workDir directory.

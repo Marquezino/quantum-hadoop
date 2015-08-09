@@ -83,9 +83,10 @@ parameters:
 -POSITION: A specific position given by chosen
     indexes in the input array. This must be in
     the same dimension of the array in the input
-    file. Use the character "?" to represent a
-    not static value and the character comma to
-    separate them: ?,?,?,?,x,y
+    file. This parameter is optional. Use the
+    character "?" to represent a not static value
+    and the character comma to separate them:
+    ?,?,?,?,x1,x2
 
 Run
 ---
