@@ -51,7 +51,7 @@ public class Grover {
 
     /**
      * COUNT_PSI: number of parallel calculations. Default value: number
-     * of map functions.
+     * of reduce functions.
      */
     private static final long COUNT_PSI = 2;
 
@@ -101,6 +101,8 @@ public class Grover {
             Text outputValue = new Text();
             HashMap<Long, String> psi = new HashMap<Long, String>();
             ArrayList<String> listValues = new ArrayList<String>();
+            long first = (long)(n / COUNT_PSI * index);
+            long last = (long)(n / COUNT_PSI * (index + 1));
             double c1 = 2.0 / n;
             double tempValue = 0;
             long j;
@@ -112,50 +114,46 @@ public class Grover {
                     listValues.add(values.next().toString());
                 }
 
-                for (long i = 0; i < n; i++) {
+                for (long i = first; i < last; i++) {
 
-                    if (i % COUNT_PSI == index) {
+                    for (int idx = 0; idx < listValues.size(); idx++) {
 
-                        for (int idx = 0; idx < listValues.size(); idx++) {
+                        val = listValues.get(idx).split(",");
+                        j = Long.parseLong(val[1]);
 
-                            val = listValues.get(idx).split(",");
-                            j = Long.parseLong(val[1]);
+                        if (j == m) {
 
-                            if (j == m) {
+                            if (i == j) {
 
-                                if (i == j) {
-
-                                    tempValue = 1.0 - c1;
-                                } else {
-
-                                    tempValue = -c1;
-                                }
+                                tempValue = 1.0 - c1;
                             } else {
 
-                                if (i == j) {
-
-                                    tempValue = c1 - 1.0;
-                                } else {
-
-                                    tempValue = c1;
-                                }
+                                tempValue = -c1;
                             }
+                        } else {
 
-                            element = val[3].split("j");
+                            if (i == j) {
 
-                            if (psi.containsKey(i)) {
-                                tempVal = psi.get(i).split("j");
-                                psi.put(i, Double.toString(Double.parseDouble(
-                                        tempVal[0]) + tempValue
-                                        * Double.parseDouble(element[0]))
-                                        + "j" + element[1]);
+                                tempValue = c1 - 1.0;
                             } else {
-                                psi.put(i, Double.toString(tempValue
-                                        * Double.parseDouble(element[0])) + "j"
-                                        + element[1]);
+
+                                tempValue = c1;
                             }
                         }
 
+                        element = val[3].split("j");
+
+                        if (psi.containsKey(i)) {
+                            tempVal = psi.get(i).split("j");
+                            psi.put(i, Double.toString(Double.parseDouble(
+                                    tempVal[0]) + tempValue
+                                    * Double.parseDouble(element[0]))
+                                    + "j" + element[1]);
+                        } else {
+                            psi.put(i, Double.toString(tempValue
+                                    * Double.parseDouble(element[0])) + "j"
+                                    + element[1]);
+                        }
                     }
 
                 }
