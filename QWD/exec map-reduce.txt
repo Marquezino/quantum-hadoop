@@ -1,0 +1,50 @@
+####################################################################################################
+# Operações ########################################################################################
+
+hadoop jar operations.jar operations.MultMatrix /user/david/mult /user/david/mult-out B
+hadoop jar operations.jar operations.KronMatrix /user/david/multKron /user/david/multKron-out B
+hadoop jar operations.jar operations.NormMatrix /user/david/norm /user/david/norm-out
+hadoop jar operations.jar operations.AbsSquare /user/david/pdf /user/david/pdf-out
+hadoop jar operations.jar operations.Reshape 2,2,10,10,2,2,10,10 /user/david/reshape /user/david/reshape-out
+hadoop jar operations.jar operations.SumAxis 1,2,5,6 ?,?,?,?,?,?,5,5 /user/david/sumaxis /user/david/sumaxis-out
+
+hadoop jar qwd.jar qwd.QWD
+
+####################################################################################################
+
+####################################################################################################
+# Manipular os resultados apos cada execucao #######################################################
+
+hadoop dfs -copyToLocal /user/david/mult-out mult-out
+hadoop dfs -rmr /user/david/mult-out
+
+hadoop dfs -copyToLocal /user/david/multKron-out multKron-out
+hadoop dfs -rmr /user/david/multKron-out
+
+hadoop dfs -copyToLocal /user/david/norm-out norm-out
+hadoop dfs -rmr /user/david/norm-out
+
+hadoop dfs -copyToLocal /user/david/pdf-out pdf-out
+adoop dfs -rmr /user/david/pdf-out
+
+hadoop dfs -copyToLocal /user/david/reshape-out reshape-out
+hadoop dfs -rmr /user/david/reshape-out
+
+hadoop dfs -copyToLocal /user/david/sumaxis-out sumaxis-out
+hadoop dfs -rmr /user/david/sumaxis-out
+
+hadoop dfs -copyToLocal /user/david/qwd_tmp qwd_tmp
+hadoop dfs -rmr /user/david/qwd_tmp/*
+
+####################################################################################################
+
+####################################################################################################
+# Criando um arquivo .jar ##########################################################################
+
+mkdir bin
+
+javac -d bin/ src/QWD.java
+
+jar -cvf qwd.jar -C bin/ .
+
+####################################################################################################

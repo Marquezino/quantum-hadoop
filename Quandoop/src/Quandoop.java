@@ -157,11 +157,19 @@ public class Quandoop {
             if (pdfCalc) {
 
                 numAxes = dimensions.split(",").length;
-                fullAxes = "1";
-                for (int i = 2; i <= numAxes; i++) {
-                    fullAxes += "," + Integer.toString(i);
+
+                if (measurement.indexOf("1") > -1) {
+                    fullAxes = "";
+                } else {
+                    fullAxes = "1";
                 }
-                measurement = fullAxes.replaceAll(measurement + ",", "");
+                
+                for (int i = 2; i <= numAxes; i++) {
+                    if (measurement.indexOf(Integer.toString(i)) == -1) {
+                        fullAxes += "," + Integer.toString(i);
+                    }
+                }
+                measurement = fullAxes;
 
             }
 
@@ -250,8 +258,7 @@ public class Quandoop {
                 for (FileStatus stat : status) {
 
                     fs.rename(stat.getPath(), new Path(stat.getPath().
-                            toString().replaceAll("part-r-", "part-U"
-                            + Integer.toString(i) + "-")));
+                            toString() + "-U" + Integer.toString(i)));
                 }
 
             }

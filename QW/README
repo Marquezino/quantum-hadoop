@@ -7,7 +7,7 @@ What is it?
 Quantum Walk is a program coded in Java
 that use Apache Hadoop to execute a specific
 Quantum Walk simulation with two walkers in a
-two dimensional lattice.
+two-dimensional lattice.
 
 
 Apache Hadoop and Java Version notes
@@ -67,6 +67,6 @@ jar -cvf qw.jar -C bin/ .
 
 To run execute the follow command:
 
-hadoop jar qw.jar qw.QWS
+hadoop jar qw.jar qw.QW
 
 

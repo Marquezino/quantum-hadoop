@@ -1,0 +1,69 @@
+Quantum Walk Data Version 1.0 2015-08-25
+
+
+What is it?
+-----------
+
+Quantum Walk Data is a program coded in Java
+that use Apache Hadoop to generate the data to be used in a
+specific Quantum Walk simulation with four walkers
+in a one-dimensional lattice.
+
+
+Apache Hadoop and Java Version notes
+------------------------------------
+
+The Quantum Walk supports JDK 1.6 or
+higher and Apache Hadoop version 1.2 or higher.
+Note that we have currently tested this
+implementation with JDK 1.7 and Apache Hadoop
+1.2.1.
+
+
+Parameters
+----------
+
+In the QW.java file the user can change the
+value of the variable SIZE, STEPS, PATH, JAR_DIR
+and CLEAN_FOLDERS.
+
+-SIZE: The dimensions of the two dimensional
+    lattice.
+
+-WORK_DIR: The path in the HDFS where the program
+	will store the data. 
+
+-JAR_DIR: The folder path where the .jar files
+	are stored.
+	
+-OUTPUT_DIR: The folder path where the result
+	will be stored. Should be a empty folder
+	because this ALL DATA will be deleted.
+	
+-CLEAN_FOLDERS: Set for true to delete
+    unnecessary files during the execution to
+    increase available storage space.
+
+
+Compile and run
+---------------
+
+To compile the code you need to set the
+environment variable CLASSPATH for your user with:
+
+HADOOP_FOLDER_PATH/*:HADOOP_FOLDER_PATH/lib/*
+
+
+Open the Terminal and go to the location where
+the folder src is stored. Now, execute the follow
+commands:
+
+mkdir bin
+javac -d bin/ src/QWD.java
+jar -cvf qwd.jar -C bin/ .
+
+To run execute the follow command:
+
+hadoop jar qwd.jar qwd.QWD
+
+
