@@ -43,7 +43,7 @@ public class GS {
      * This is the size of the list where the Grover algorithm will do the
      * search.
      */
-    private static final int N = 4;
+    private static final int N = 15;
 
     /**
      * The path in the HDFS where the program will store the data.
@@ -64,6 +64,7 @@ public class GS {
     public static void main(String[] args) throws Exception {
 
         long startTime = System.nanoTime();
+        long elapseTime = System.nanoTime();
         long n = (long) Math.pow(2, N);
         int steps = (int) ((Math.PI / 4) * Math.sqrt(n));
         String psi;
@@ -158,6 +159,8 @@ public class GS {
                 System.out.println("End of the Step " + (i + 1));
             }
 
+            elapseTime = System.nanoTime();
+
             // Put the file with the header first.
             pt = new Path(PATH + psiT);
             status = fs.listStatus(pt);
@@ -222,7 +225,7 @@ public class GS {
 
             System.out.println("Finished!");
 
-            System.out.println("Steps Runtime = " + ((System.nanoTime()
+            System.out.println("Steps Runtime = " + ((elapseTime
                     - startTime) / Math.pow(10, 9)) + " seconds");
 
             // End of the Steps

@@ -40,7 +40,7 @@ public class QWD {
     /**
      * The dimensions of the two dimensional lattice.
      */
-    private static final int SIZE = 10;
+    private static final int SIZE = 5;
 
     /**
      * The path in the HDFS where the program will store the data.
@@ -87,7 +87,6 @@ public class QWD {
         String operatorW2;
         String operatorW3;
         String operatorW4;
-        String operatorG;
         String psi;
         BufferedWriter bw;
         Runtime rt = Runtime.getRuntime();
@@ -517,26 +516,8 @@ public class QWD {
 
             /*
              * End of the operatorW1, operatorW2, operatorW3 and operatorW4.
-             * Start of the operatorG.
+             * Start of the psi.
              */
-
-            operatorG = "operatorG";
-            pt = new Path(WORK_DIR + operatorG + "/part-r");
-            bw = new BufferedWriter(new OutputStreamWriter(fs.create(pt,
-                    true)));
-            bw.write("#A," + Long.toString((long) (16 * Math.pow(SIZE, 4)))
-                    + "," + Long.toString((long) (16 * Math.pow(SIZE, 4))));
-
-            for (long i = 0; i < (long) (16 * Math.pow(SIZE, 4)); i++) {
-                bw.write("\nA," + Long.toString(i) + "," + Long.toString(i)
-                        + ",1.0j0");
-            }
-
-            bw.close();
-
-            System.out.println("End of the operatorG.");
-
-            // End of the operatorG. Start of the psi.
 
             psi = "psi";
 
@@ -669,8 +650,6 @@ public class QWD {
             fu.copy(fs, pt, new File(OUTPUT_DIR + "operatorW3"), false, conf);
             pt = new Path(WORK_DIR + operatorW4);
             fu.copy(fs, pt, new File(OUTPUT_DIR + "operatorW4"), false, conf);
-            pt = new Path(WORK_DIR + operatorG);
-            fu.copy(fs, pt, new File(OUTPUT_DIR + "operatorG"), false, conf);
             pt = new Path(WORK_DIR + psi);
             fu.copy(fs, pt, new File(OUTPUT_DIR + "psi"), false, conf);
 
